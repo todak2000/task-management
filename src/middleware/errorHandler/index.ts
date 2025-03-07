@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from "express";
 
 // Custom error type definition
 interface ErrorHandlerError extends Error {
@@ -16,7 +16,7 @@ const logError = (err: ErrorHandlerError, statusCode: number) => {
   console.error(
     `[${new Date().toISOString()}]`,
     `Error ${statusCode}: ${err.message}`,
-    '\nStack Trace:',
+    "\nStack Trace:",
     err.stack
   );
 };
@@ -32,18 +32,19 @@ export const errorHandler = (
   const statusCode = getStatusCode(err);
 
   // Construct error message based on environment
-  const message = 
-    process.env.NODE_ENV === 'development'
+  const message =
+    process.env.NODE_ENV === "development"
       ? err.message
-      : 'Something went wrong';
+      : "Something went wrong";
 
   // Log error details
+
   logError(err, statusCode);
 
   // Send JSON response
   res.status(statusCode).json({
-    error: 'Internal Server Error',
+    error: "Internal Server Error",
     message,
-    ...(process.env.NODE_ENV === 'development' && { details: err })
+    ...(process.env.NODE_ENV === "development" && { details: err }),
   });
 };

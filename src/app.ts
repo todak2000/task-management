@@ -37,6 +37,9 @@ app.use(customCors);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Error Handling Middleware
+app.use(errorHandler);
+
 // Swagger setup needs to be configured for CSP
 app.use(
   "/api-docs",
@@ -71,8 +74,6 @@ app.use((req, res, next) => {
   });
 });
 
-// Error Handling Middleware
-app.use(errorHandler);
 // Start server
 if (require.main === module) {
   app.listen(port, () => {
