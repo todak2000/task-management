@@ -1,6 +1,6 @@
 import swaggerJsdoc from "swagger-jsdoc";
 import dotenv from "dotenv";
-import path from 'path';
+import path from "path";
 
 dotenv.config();
 const options: swaggerJsdoc.Options = {
@@ -43,12 +43,20 @@ const options: swaggerJsdoc.Options = {
       },
     ],
   },
-apis:[
-    path.resolve(__dirname, '../routes/**/*.ts'),
-    path.resolve(__dirname, '../models/*.ts'),
-    path.resolve(__dirname, '../controllers/**/*.ts'),
-    path.resolve(__dirname, '../app.ts')
-]
+  apis:
+    process.env.NODE_ENV === "development"
+      ? [
+          path.resolve(__dirname, "../routes/**/*.ts"),
+          path.resolve(__dirname, "../models/*.ts"),
+          path.resolve(__dirname, "../controllers/**/*.ts"),
+          path.resolve(__dirname, "../app.ts"),
+        ]
+      : [
+          path.resolve(__dirname, "../routes/**/*.js"),
+          path.resolve(__dirname, "../models/*.js"),
+          path.resolve(__dirname, "../controllers/**/*.js"),
+          path.resolve(__dirname, "../app.js"),
+        ],
 };
 
 const specs = swaggerJsdoc(options);
