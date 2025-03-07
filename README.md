@@ -87,6 +87,10 @@ yarn test   # Run test
 https://task-management-scsb.onrender.com/api-docs
 
 
+### Postman Documentation
+
+https://www.postman.com/warped-zodiac-504295/general-ws/collection/41co8bd/task-management-api
+
 
 Here's the detailed documentation for your implemented endpoints, formatted for your README:
 
@@ -268,7 +272,9 @@ curl -X GET http://localhost:3000/api/v1/users/64c3d1f2b5a2ce6789d1f267 \
 
 Access interactive docs at:
 ```
-https://task-management-scsb.onrender.com/api-docs
+- OpenAI Swagger: https://task-management-scsb.onrender.com/api-docs
+
+- Postman: https://www.postman.com/warped-zodiac-504295/general-ws/collection/41co8bd/task-management-api
 ```
 
 ## Best Practices Implemented
@@ -289,11 +295,6 @@ https://task-management-scsb.onrender.com/api-docs
 - Dependency injection
 - TypeScript strict mode
 - Modular routing
-
-## Testing
-
-Use Swagger or Postman or curl:
-
 
 
 ## Future Enhancements
