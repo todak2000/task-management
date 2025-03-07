@@ -9,6 +9,7 @@ import swaggerSpecs from "./config/swagger";
 
 import userRoutes from "./routes/users";
 import authRoutes from "./routes/auth";
+import taskRoutes from "./routes/tasks";
 import { connectToDB } from "./database";
 // Load environment variables
 dotenv.config();
@@ -24,7 +25,7 @@ const port = process.env.PORT || 3000;
 app.use(rateLimiter);
 
 // trust the X-Forwarded-For header added by Render's proxy.
-app.set('trust proxy', true);
+app.set("trust proxy", true);
 
 // Security middleware
 app.use(helmet());
@@ -35,9 +36,6 @@ app.use(customCors);
 // Body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Error Handling Middleware
-app.use(errorHandler);
 
 // Swagger setup needs to be configured for CSP
 app.use(
@@ -62,13 +60,26 @@ app.use(
 // APIS
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/tasks", taskRoutes);
 
+// Error Handling Middleware
+app.use(errorHandler);
 // Start server
 if (require.main === module) {
   app.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
     console.log(
-      `API Documentation available at http://localhost:${port}/api-docs`
+      `Server is running at ${
+        process.env.NODE_ENV === "development"
+          ? `http://localhost:${port}`
+          : process.env.DOMAIN_URL
+      }`
+    );
+    console.log(
+      `API Documentation available at ${
+        process.env.NODE_ENV === "development"
+          ? `http://localhost:${port}`
+          : process.env.DOMAIN_URL
+      }/api-docs`
     );
   });
 }

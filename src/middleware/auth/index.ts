@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import jwtConfig from "../../config/jwt";
-import { ApiError, errorHandler } from "../errorHandler/generalError";
+import { errorHandler } from "../errorHandler/generalError";
 
 interface UserPayload {
   userId: string;

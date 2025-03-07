@@ -69,6 +69,7 @@ const router = express.Router();
  */
 router.get("/", getUsers);
 
+
 /**
  * @swagger
  * /api/v1/users/{id}:
