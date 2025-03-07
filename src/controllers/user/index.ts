@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import User from "../../models/User";
 import { errorHandler } from "../../middleware/errorHandler/generalError";
+import successHandler from "../../middleware/successHandler";
 export const getUsers = async (
   req: Request,
   res: Response,
@@ -11,10 +12,11 @@ export const getUsers = async (
 
   try {
     const users = await User.find()
-      .select("-password")
+      .select("-password -__v -createdAt")
       .skip((page - 1) * limit)
       .limit(limit);
-    res.status(200).json(users);
+
+    return successHandler(res, users, "Users retrieved successfully");
   } catch (err) {
     return errorHandler(
       "Error fetching users",
@@ -45,7 +47,9 @@ export const getUserById = async (
       );
     }
 
-    const user = await User.findById(req.params.id).select("-password");
+    const user = await User.findById(req.params.id).select(
+      "-password -__v -createdAt"
+    );
     if (!user) {
       return errorHandler(
         "User not found",
@@ -56,7 +60,8 @@ export const getUserById = async (
         "User not found"
       );
     }
-    res.status(200).json(user);
+
+    return successHandler(res, user, "User details retrieved");
   } catch (err) {
     return errorHandler(
       "Error fetching user",

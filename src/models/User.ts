@@ -32,7 +32,6 @@ import mongoose, { Schema, Document } from 'mongoose';
  *         _id: 60d21b4667d0d8992e610c85
  *         name: John Doe
  *         email: john@example.com
- *         password: $2a$10$Xe.qc8/gFiVWZcU9veKT2eN7ixpT3Nz.qtOAJW/Ej6qF7wVlGsBYu
  *         createdAt: 2023-12-15T14:29:47.000Z
  */
 export interface IUser extends Document {

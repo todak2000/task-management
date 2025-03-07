@@ -6,6 +6,45 @@ const router = express.Router();
 
 /**
  * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: "64c3d1f2b5a2ce6789d1f2b5"
+ *         name:
+ *           type: string
+ *           example: "John Doe"
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: "john@example.com"
+ *       required:
+ *         - id
+ *         - name
+ *         - email
+ *
+ *     ApiResponse:
+ *       type: object
+ *       properties:
+ *         status:
+ *           type: integer
+ *           example: 200
+ *         message:
+ *           type: string
+ *           example: "Success"
+ *         data:
+ *           oneOf:
+ *             - type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *             - $ref: '#/components/schemas/User'
+ */
+
+/**
+ * @swagger
  * /api/v1/users:
  *   get:
  *     summary: Returns a list of users
@@ -13,13 +52,18 @@ const router = express.Router();
  *     tags: [Users]
  *     responses:
  *       200:
- *         description: A list of users
+ *         description: Users retrieved successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/User'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/User'
  *       500:
  *         description: Server error
  */
@@ -41,11 +85,16 @@ router.get("/", getUsers);
  *         description: The user id
  *     responses:
  *       200:
- *         description: A user object
+ *         description: User retrieved successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/User'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/User'
  *       404:
  *         description: User not found
  *       500:

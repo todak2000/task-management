@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import User from "../../models/User";
 import jwtConfig from "../../config/jwt";
 import { errorHandler } from "../../middleware/errorHandler/generalError";
+import successHandler from "../../middleware/successHandler";
 
 export const login = async (
   req: Request,
@@ -51,15 +52,7 @@ export const login = async (
     const token = jwt.sign(payload, jwtConfig.secret, { expiresIn: "30m" });
 
     // Return token
-    res.status(200).json({
-      token,
-      message: "Logged in successful",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
-    });
+    return successHandler(res, token, "User Logged in successfully!");
   } catch (error) {
     return errorHandler(
       error,
@@ -85,8 +78,7 @@ export const register = async (
       $or: [{ email }],
     });
     if (checkExistingUser) {
-      const err =
-        "Oops! This email is taken. Try a different email address.";
+      const err = "Oops! This email is taken. Try a different email address.";
       return errorHandler(err, req, res, next, 400, err);
     }
 
@@ -110,7 +102,12 @@ export const register = async (
       createdAt: savedUser.createdAt,
     };
 
-    res.status(201).json(userResponse);
+    return successHandler(
+      res,
+      userResponse,
+      "User Registered successfully!",
+      201
+    );
   } catch (err: unknown) {
     return errorHandler(
       err ?? "An error occurred!",

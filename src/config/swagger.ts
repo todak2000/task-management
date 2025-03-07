@@ -29,6 +29,21 @@ const options: swaggerJsdoc.Options = {
       },
     ],
     components: {
+      schemas: {
+        User: {
+          type: "object",
+          properties: {
+            id: { type: "string", example: "64c3d1f2b5a2ce6789d1f2b5" },
+            name: { type: "string", example: "John Doe" },
+            email: {
+              type: "string",
+              format: "email",
+              example: "john@example.com",
+            },
+          },
+          required: ["id", "name", "email"],
+        },
+      },
       securitySchemes: {
         bearerAuth: {
           type: "http",

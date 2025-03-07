@@ -13,10 +13,10 @@ describe("Authentication Endpoints", () => {
       });
 
       expect(response.status).toBe(201);
-      expect(response.body).toHaveProperty("_id");
-      expect(response.body).toHaveProperty("createdAt");
-      expect(response.body).toHaveProperty("name", "Test User");
-      expect(response.body).toHaveProperty("email", "test1@example.com");
+      expect(response.body.data).toHaveProperty("_id");
+      expect(response.body.data).toHaveProperty("createdAt");
+      expect(response.body.data).toHaveProperty("name", "Test User");
+      expect(response.body.data).toHaveProperty("email", "test1@example.com");
 
       //   Check if user was actually created in the database
       const user = await User.findOne({ email: "test1@example.com" });
@@ -69,10 +69,11 @@ describe("Authentication Endpoints", () => {
       });
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty("token");
-      expect(response.body).toHaveProperty("user");
-      expect(response.body.user).toHaveProperty("name", "Login Test User");
-      expect(response.body.user).toHaveProperty("email", "test111@example.com");
+      expect(response.body).toHaveProperty("data");
+      expect(response.body).toHaveProperty(
+        "message",
+        "User Logged in successfully!"
+      );
     }, 10000);
 
     it("should return 401 with incorrect password", async () => {

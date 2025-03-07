@@ -113,12 +113,15 @@ Registers a new user account
 - `201 Created`:
   ```json
   {
-    "token": "jwt_token_here",
+    "status": 201,
+    "message": "Registration successful",
+    "data": {
     "user": {
-      "id": "user_id",
-      "name": "John Doe",
-      "email": "john@example.com"
+      "id": "string",
+      "name": "string",
+      "email": "string"
     }
+   }
   }
   ```
 - `400 Bad Request`: Invalid input or user already exists
@@ -148,12 +151,9 @@ Authenticates a user and returns a JWT token
 - `200 OK`:
   ```json
   {
-    "token": "jwt_token_here",
-    "user": {
-      "id": "user_id",
-      "name": "User Name",
-      "email": "user@example.com"
-    }
+    "status": 200,
+    "message": "Login successful",
+    "data": "jwt_token_here"
   }
   ```
 - `400 Bad Request`: Missing credentials
@@ -178,18 +178,18 @@ Retrieves a list of all users
 **Responses**:
 - `200 OK`:
   ```json
-  [
-    {
-      "id": "user_id_1",
-      "name": "User One",
-      "email": "user1@example.com"
-    },
-    {
-      "id": "user_id_2",
-      "name": "User Two",
-      "email": "user2@example.com"
-    }
-  ]
+  {
+    "status": 200,
+    "message": "Success",
+    "data": [
+        {
+            "_id": "60d21b4667d0d8992e610c85",
+            "name": "John Doe",
+            "email": "john@example.com",
+            "createdAt": "2023-12-15T14:29:47.000Z"
+        }
+    ]
+  }
   ```
 - `401 Unauthorized`: Missing/invalid token
 - `403 Forbidden`: Non-Authorized user
@@ -217,9 +217,14 @@ Authorization: Bearer <jwt_token>
 - `200 OK`:
   ```json
   {
-    "id": "requested_user_id",
-    "name": "User Name",
-    "email": "user@example.com"
+    "status": 200,
+    "message": "Success",
+    "data": {
+        "_id": "60d21b4667d0d8992e610c85",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "createdAt": "2023-12-15T14:29:47.000Z"
+    }
   }
   ```
 - `401 Unauthorized`: Missing/invalid token

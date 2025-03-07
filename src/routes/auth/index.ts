@@ -42,18 +42,18 @@ const router = express.Router();
  *             schema:
  *               type: object
  *               properties:
- *                 token:
+ *                 status:
+ *                   type: number
+ *                   example: 200
+ *                 message:
  *                   type: string
- *                   description: JWT authentication token
- *                 user:
- *                   type: object
+ *                   example: "Login successful"
+ *                 data:
+ *                   type: string
  *                   properties:
- *                     id:
+ *                     token:
  *                       type: string
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
+ *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2NhNWU2MzNjMmExOGVjNzRhMGFiZjUiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NDEzMzQyNzYsImV4cCI6MTc0MTMzNjA3Nn0.HtdswPf2hmX-qkazqpycb-FzBK6xhFjEFpLd4D1rDnk"
  *       400:
  *         description: Invalid input
  *       401:
@@ -61,18 +61,14 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-router.post(
-  "/login",
-  validateUser,
-  login
-);
+router.post("/login", validateUser, login);
 
 /**
  * @swagger
  * /api/v1/auth/register:
  *   post:
  *     summary: Register a new user
- *     description: Create a new user account and return a JWT token
+ *     description: Create a new user account
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -103,18 +99,24 @@ router.post(
  *             schema:
  *               type: object
  *               properties:
- *                 token:
+ *                 status:
+ *                   type: number
+ *                   example: 201
+ *                 message:
  *                   type: string
- *                   description: JWT authentication token
- *                 user:
+ *                   example: "Registration successful"
+ *                 data:
  *                   type: object
  *                   properties:
- *                     id:
- *                       type: string
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                         email:
+ *                           type: string
  *       400:
  *         description: Invalid input or user already exists
  *       500:
