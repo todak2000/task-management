@@ -64,31 +64,30 @@ app.use("/api/v1/tasks", taskRoutes);
 
 // Catch-all route for undefined routes
 app.use((req, res, next) => {
-    res.status(404).json({
-      status: "error",
-      message: "Endpoint not found",
-      error: `The requested endpoint ${req.method} ${req.url} does not exist`,
-    });
+  res.status(404).json({
+    status: "error",
+    message: "Endpoint not found",
+    error: `The requested endpoint ${req.method} ${req.url} does not exist`,
   });
-  
+});
+
 // Error Handling Middleware
 app.use(errorHandler);
 // Start server
 if (require.main === module) {
   app.listen(port, () => {
-    console.log(
-      `Server is running at ${
-        process.env.NODE_ENV === "development"
-          ? `http://localhost:${port}`
-          : process.env.DOMAIN_URL
-      }`
-    );
-    console.log(
-      `API Documentation available at ${
-        process.env.NODE_ENV === "development"
-          ? `http://localhost:${port}`
-          : process.env.DOMAIN_URL
-      }/api-docs`
-    );
+    const serverUrl =
+      process.env.NODE_ENV === "development"
+        ? `http://localhost:${port}`
+        : process.env.DOMAIN_URL;
+
+    const docsUrl = `${serverUrl}/api-docs`;
+
+    console.log(`
+🚀 Server is up and running at: \x1b[36m${serverUrl}\x1b[0m
+📚 API Documentation is available at: \x1b[36m${docsUrl}\x1b[0m
+✨ Environment: \x1b[33m${process.env.NODE_ENV || "development"}\x1b[0m
+🌈 Happy coding!
+    `);
   });
 }
