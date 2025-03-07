@@ -15,7 +15,7 @@ A RESTful API for task management with authentication, validation, and role-base
 - Input validation using Joi
 - Rate limiting (100 requests/15min)
 
-🚧 **Task Management** (Coming Soon)
+🚧 **Task Management**
 - CRUD operations for tasks
 - Priority (Low/Medium/High) and Status (Pending/Completed) filtering
 - Due date management
@@ -112,6 +112,7 @@ Registers a new user account
 
 **Responses**:
 - `201 Created`:
+
   ```json
   {
     "status": 201,
@@ -150,6 +151,7 @@ Authenticates a user and returns a JWT token
 
 **Responses**:
 - `200 OK`:
+
   ```json
   {
     "status": 200,
@@ -182,6 +184,7 @@ Retrieves a list of all users
 
 **Responses**:
 - `200 OK`:
+
   ```json
   {
     "status": 200,
@@ -233,6 +236,7 @@ Authorization: Bearer <jwt_token>
 
 **Responses**:
 - `200 OK`:
+
   ```json
   {
     "status": 200,
@@ -292,6 +296,7 @@ Authorization: Bearer <jwt_token>
 
 **Responses**:
 - `201 Created`:
+
   ```json
   {
     "status": 201,
@@ -342,6 +347,7 @@ Authorization: Bearer <jwt_token>
 
 **Responses**:
 - `200 OK`:
+
   ```json
   {
     
@@ -406,6 +412,7 @@ Authorization: Bearer <jwt_token>
 
 **Responses**:
 - `200 OK`:
+
   ```json
   {
     
@@ -465,6 +472,7 @@ Authorization: Bearer <jwt_token>
 
 **Responses**:
 - `200 OK`:
+
   ```json
   {
     
