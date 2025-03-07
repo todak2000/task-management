@@ -23,6 +23,9 @@ const port = process.env.PORT || 3000;
 // Apply rate limiting to all requests
 app.use(rateLimiter);
 
+// trust the X-Forwarded-For header added by Render's proxy.
+app.set('trust proxy', true);
+
 // Security middleware
 app.use(helmet());
 

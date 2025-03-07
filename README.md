@@ -84,7 +84,7 @@ yarn test   # Run test
 
 ### Swagger Documentation
 
-https://xyz.onrender.com/api-docs
+https://task-management-scsb.onrender.com/api-docs
 
 
 
@@ -263,7 +263,7 @@ curl -X GET http://localhost:3000/api/v1/users/64c3d1f2b5a2ce6789d1f2b5 \
 
 Access interactive docs at:
 ```
-http://localhost:3000/api-docs
+https://task-management-scsb.onrender.com/api-docs
 ```
 
 ## Best Practices Implemented

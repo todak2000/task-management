@@ -21,7 +21,7 @@ const options: swaggerJsdoc.Options = {
         url:
           process.env.NODE_ENV === "development"
             ? "http://localhost:3000"
-            : "http://livelink:3000",
+            : process.env.DOMAIN_URL,
         description:
           process.env.NODE_ENV === "development"
             ? "Development server"
