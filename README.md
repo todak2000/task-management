@@ -1,7 +1,7 @@
 
 # Task Management API
 
-[![GitHub license](https://img.shields.io/github/license/your-username/task-management-api)](LICENSE)
+[![GitHub license](https://img.shields.io/github/license/todak2000/task-management)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-18.x-green)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-6.0-blue)](https://www.mongodb.com/)
 
