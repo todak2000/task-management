@@ -1,5 +1,5 @@
 import express from "express";
-import { getUserById, getUsers } from "../../controllers/user";
+import { getUsers, getUserById } from "../../controllers/user";
 import authMiddleware from "../../middleware/auth";
 
 const router = express.Router();
@@ -26,6 +26,22 @@ const router = express.Router();
  *         - name
  *         - email
  *
+ *     Pagination:
+ *       type: object
+ *       properties:
+ *         total:
+ *           type: integer
+ *           example: 100
+ *         page:
+ *           type: integer
+ *           example: 1
+ *         limit:
+ *           type: integer
+ *           example: 10
+ *         totalPages:
+ *           type: integer
+ *           example: 10
+ *
  *     ApiResponse:
  *       type: object
  *       properties:
@@ -36,11 +52,14 @@ const router = express.Router();
  *           type: string
  *           example: "Success"
  *         data:
- *           oneOf:
- *             - type: array
+ *           type: object
+ *           properties:
+ *             users:
+ *               type: array
  *               items:
  *                 $ref: '#/components/schemas/User'
- *             - $ref: '#/components/schemas/User'
+ *             pagination:
+ *               $ref: '#/components/schemas/Pagination'
  */
 
 /**
@@ -48,22 +67,28 @@ const router = express.Router();
  * /api/v1/users:
  *   get:
  *     summary: Returns a list of users
- *     description: Retrieve a list of all users
+ *     description: Retrieve a paginated list of all users
  *     tags: [Users]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: The page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: The number of users per page
  *     responses:
  *       200:
  *         description: Users retrieved successfully
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/ApiResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/User'
+ *               $ref: '#/components/schemas/ApiResponse'
  *       500:
  *         description: Server error
  */
@@ -73,8 +98,8 @@ router.get("/", getUsers);
  * @swagger
  * /api/v1/users/{id}:
  *   get:
- *     summary: Get a user by id
- *     description: Retrieve a single user by their id
+ *     summary: Get a user by ID
+ *     description: Retrieve a single user by their ID
  *     tags: [Users]
  *     parameters:
  *       - in: path
@@ -82,7 +107,7 @@ router.get("/", getUsers);
  *         schema:
  *           type: string
  *         required: true
- *         description: The user id
+ *         description: The user ID
  *     responses:
  *       200:
  *         description: User retrieved successfully
