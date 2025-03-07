@@ -62,6 +62,15 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/tasks", taskRoutes);
 
+// Catch-all route for undefined routes
+app.use((req, res, next) => {
+    res.status(404).json({
+      status: "error",
+      message: "Endpoint not found",
+      error: `The requested endpoint ${req.method} ${req.url} does not exist`,
+    });
+  });
+  
 // Error Handling Middleware
 app.use(errorHandler);
 // Start server
