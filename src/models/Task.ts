@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Types } from "mongoose";
 
 /**
  * @swagger
@@ -60,7 +60,7 @@ export interface ITask extends Document {
   dueDate: Date;
   priority: "Low" | "Medium" | "High";
   owner: {
-    _id: any;
+    _id: Types.ObjectId;
     name: string;
     email: string;
   }; // User ID

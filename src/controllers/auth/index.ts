@@ -10,7 +10,7 @@ export const login = async (
   req: Request,
   res: Response,
   next: NextFunction
-): Promise<any> => {
+): Promise<void> => {
   try {
     const { email, password } = req.body;
 
@@ -18,28 +18,30 @@ export const login = async (
     const user = await User.findOne({ email });
 
     if (!user) {
-      return errorHandler(
+      next(errorHandler(
         "Invalid email",
         req,
         res,
         next,
         401,
         "Invalid email"
-      );
+      ));
+      return
     }
 
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      return errorHandler(
+      next(errorHandler(
         "Wrong password!",
         req,
         res,
         next,
         401,
         "Wrong password!"
-      );
+      ));
+      return
     }
 
     // Create JWT payload
@@ -52,16 +54,18 @@ export const login = async (
     const token = jwt.sign(payload, jwtConfig.secret, { expiresIn: "30m" });
 
     // Return token
-    return successHandler(res, token, "User Logged in successfully!");
+    next(successHandler(res, token, "User Logged in successfully!"));
+    return
   } catch (error) {
-    return errorHandler(
+    next(errorHandler(
       error,
       req,
       res,
       next,
       500,
       "Server error during authentication!"
-    );
+    ));
+    return
   }
 };
 
@@ -69,7 +73,7 @@ export const register = async (
   req: Request,
   res: Response,
   next: NextFunction
-): Promise<any> => {
+): Promise<void> => {
   try {
     const { name, email, password } = req.body;
 
@@ -79,7 +83,8 @@ export const register = async (
     });
     if (checkExistingUser) {
       const err = "Oops! This email is taken. Try a different email address.";
-      return errorHandler(err, req, res, next, 400, err);
+      next(errorHandler(err, req, res, next, 400, err));
+      return
     }
 
     //hash user password
@@ -101,21 +106,21 @@ export const register = async (
       email: savedUser.email,
       createdAt: savedUser.createdAt,
     };
-
-    return successHandler(
-      res,
-      userResponse,
-      "User Registered successfully!",
-      201
+    next(
+      successHandler(res, userResponse, "User Registered successfully!", 201)
     );
+    return
   } catch (err: unknown) {
-    return errorHandler(
-      err ?? "An error occurred!",
-      req,
-      res,
-      next,
-      500,
-      "An error occurred!"
+    next(
+      errorHandler(
+        err ?? "An error occurred!",
+        req,
+        res,
+        next,
+        500,
+        "An error occurred!"
+      )
     );
+    return
   }
 };

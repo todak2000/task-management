@@ -9,8 +9,19 @@ interface UserPayload {
   email: string;
 }
 
+// Extend the Request type to include the user property
+interface AuthenticatedRequest extends Request {
+  user?: UserPayload;
+}
+
+// Define a custom error type
+interface CustomError extends Error {
+  status?: number;
+  message: string;
+}
+
 describe("Auth Middleware", () => {
-  let mockRequest: Partial<Request>;
+  let mockRequest: Partial<AuthenticatedRequest>;
   let mockResponse: Partial<Response>;
   let nextFunction: jest.Mock;
 
@@ -50,15 +61,15 @@ describe("Auth Middleware", () => {
 
       // Act
       authMiddleware(
-        mockRequest as Request,
+        mockRequest as AuthenticatedRequest,
         mockResponse as Response,
         nextFunction
       );
 
       // Assert
       expect(nextFunction).toHaveBeenCalled();
-      expect((mockRequest as any).user.email).toEqual(userPayload.email);
-      expect((mockRequest as any).user.userId).toEqual(userPayload.userId);
+      expect(mockRequest.user?.email).toEqual(userPayload.email);
+      expect(mockRequest.user?.userId).toEqual(userPayload.userId);
     });
   });
 
@@ -71,13 +82,14 @@ describe("Auth Middleware", () => {
 
       try {
         authMiddleware(
-          mockRequest as Request,
+          mockRequest as AuthenticatedRequest,
           mockResponse as Response,
           nextFunction
         );
-      } catch (error: any) {
-        expect(error.status).toBe(401);
-        expect(error.message).toBe("Access denied. No token provided.");
+      } catch (error: unknown) {
+        const customError = error as CustomError;
+        expect(customError.status).toBe(401);
+        expect(customError.message).toBe("Access denied. No token provided.");
       }
     });
 
@@ -91,13 +103,16 @@ describe("Auth Middleware", () => {
 
       try {
         authMiddleware(
-          mockRequest as Request,
+          mockRequest as AuthenticatedRequest,
           mockResponse as Response,
           nextFunction
         );
-      } catch (error: any) {
-        expect(error.status).toBe(401);
-        expect(error.message).toBe("Invalid token format. Use Bearer token.");
+      } catch (error: unknown) {
+        const customError = error as CustomError;
+        expect(customError.status).toBe(401);
+        expect(customError.message).toBe(
+          "Invalid token format. Use Bearer token."
+        );
       }
     });
 
@@ -112,22 +127,19 @@ describe("Auth Middleware", () => {
 
       // Mock JWT verification to fail
       jest.spyOn(jwt, "verify").mockImplementation(() => {
-        return {
-          status: 401,
-          message: "Invalid token.",
-          error: "Invalid token.",
-        };
+        throw new Error("Invalid token.");
       });
 
       try {
         authMiddleware(
-          mockRequest as Request,
+          mockRequest as AuthenticatedRequest,
           mockResponse as Response,
           nextFunction
         );
-      } catch (error: any) {
-        expect(error.status).toBe(401);
-        expect(error.message).toBe("Invalid token.");
+      } catch (error: unknown) {
+        const customError = error as CustomError;
+        expect(customError.status).toBe(401);
+        expect(customError.message).toBe("Invalid token.");
       }
     });
   });
@@ -144,22 +156,19 @@ describe("Auth Middleware", () => {
 
       // Mock JWT verification to throw error
       jest.spyOn(jwt, "verify").mockImplementation(() => {
-        return {
-          status: 401,
-          message: "jwt expired.",
-          error: "jwt expired.",
-        };
+        throw new Error("jwt expired.");
       });
 
       try {
         authMiddleware(
-          mockRequest as Request,
+          mockRequest as AuthenticatedRequest,
           mockResponse as Response,
           nextFunction
         );
-      } catch (error: any) {
-        expect(error.status).toBe(401);
-        expect(error.message).toBe("jwt expired.");
+      } catch (error: unknown) {
+        const customError = error as CustomError;
+        expect(customError.status).toBe(401);
+        expect(customError.message).toBe("jwt expired.");
       }
     });
   });

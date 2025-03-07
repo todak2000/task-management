@@ -12,41 +12,51 @@ export class ApiError extends Error {
   }
 }
 
-export const errorHandler = (
-  err: any,
+// Define a type for the Joi validation error
+interface JoiValidationError extends Error {
+  isJoi: boolean;
+  details?: Array<{ message: string }>;
+}
 
+// Define a type for the error parameter
+type ErrorType = ApiError | JoiValidationError | Error | string | unknown;
+
+export const errorHandler = (
+  err: ErrorType,
   req: Request,
   res: Response,
   next: NextFunction,
   code?: number,
   message?: string
-) => {
+): Response => {
   let status = code ?? 500;
-  message = message ?? "Internal Server Error";
+  let errorMessage = message ?? "Internal Server Error";
 
   // Handle custom ApiErrors
   if (err instanceof ApiError) {
     status = err.status;
-    message = err.message;
+    errorMessage = err.message;
   }
   // Handle celebrate validation errors
-  else if (err.isJoi) {
+  else if ((err as JoiValidationError) && (err as JoiValidationError)?.isJoi) {
     status = 400;
-    message = err.details
-      ? err.details.map((detail: any) => detail.message).join(", ")
+    errorMessage = (err as JoiValidationError)?.details
+      ? ((err as JoiValidationError)?.details
+          ?.map((detail) => detail.message)
+          .join(", ") as string)
       : "Validation failed";
   }
+
   // Handle other errors
   else {
-    message = message ?? err.message ?? "Internal Server Error";
-    if (process.env.NODE_ENV === "development") {
-      console.error(err.stack);
-    }
+    errorMessage = typeof err !== "string" ? errorMessage : err;
   }
-  // Always return JSON with status, message, and optional error details
-  return res.status(status).json({
+
+  const data = {
     status,
-    message,
+    message: errorMessage,
     ...(process.env.NODE_ENV === "development" && { error: err }),
-  });
+  };
+  // Always return JSON with status, message, and optional error details
+  return res.status(status).json(data);
 };

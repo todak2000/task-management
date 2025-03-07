@@ -1,7 +1,8 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
+import { Express } from "express";
 
-let app: any;
+let app: Express;
 let mongoServer: MongoMemoryServer;
 
 // Set a higher timeout for tests if needed

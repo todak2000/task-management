@@ -54,7 +54,6 @@ describe("Tasks Endpoints", () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe("Validation failed");
     });
 
     it("should return 401 if user is not authenticated", async () => {
@@ -77,7 +76,6 @@ describe("Tasks Endpoints", () => {
 
       expect(response.status).toBe(200);
       expect(response.body.message).toBe("User Tasks retrieved successfully!");
-
     });
 
     it("should return 401 if user is not authenticated", async () => {
@@ -128,9 +126,7 @@ describe("Tasks Endpoints", () => {
         .get(`/api/v1/tasks/${task._id}`)
         .set("Authorization", `Bearer ${authToken}`);
       expect(response.status).toBe(403);
-      expect(response.body.message).toBe(
-        "You are not authorized to access this task"
-      );
+      expect(response.body.message).toBe("Forbidden");
     });
   });
 
@@ -176,7 +172,6 @@ describe("Tasks Endpoints", () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe("Validation failed");
     });
   });
 

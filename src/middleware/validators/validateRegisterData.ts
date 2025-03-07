@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import Joi from "joi";
+import { errorHandler } from "../errorHandler/generalError";
 
 // Define the Joi schema
 const userSchema = Joi.object({
@@ -9,16 +10,17 @@ const userSchema = Joi.object({
 });
 
 // Validation middleware
-const validateUser = (req: Request, res: Response, next: NextFunction): any => {
+const validateUser = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   const { error } = userSchema.validate(req.body, { abortEarly: false });
 
   if (error) {
     // If validation fails, send a 400 response with the error details
-    return res.status(400).json({
-      status: "error",
-      message: "Validation failed",
-      errors: error.details.map((err) => err.message),
-    });
+    next(errorHandler(error, req, res, next, 400, "Validation failed"));
+    return;
   }
 
   // If validation passes, proceed to the next middleware or route handler

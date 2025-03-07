@@ -1,16 +1,16 @@
-import { Response } from 'express';
+import { Response } from "express";
 
- const successHandler = (
+const successHandler = <T>(
   res: Response,
-  data: any,
-  message: string = 'Success',
+  data: T,
+  message: string = "Success",
   statusCode: number = 200
 ) => {
   return res.status(statusCode).json({
     status: statusCode,
     message,
-    data
+    data,
   });
 };
 
-export default successHandler
+export default successHandler;
