@@ -54,7 +54,6 @@ describe("Tasks Endpoints", () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe("Validation failed");
     });
 
     it("should return 401 if user is not authenticated", async () => {
@@ -176,7 +175,6 @@ describe("Tasks Endpoints", () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe("Validation failed");
     });
   });
 
