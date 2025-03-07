@@ -16,7 +16,18 @@ export const getUsers = async (
       .skip((page - 1) * limit)
       .limit(limit);
 
-    return successHandler(res, users, "Users retrieved successfully");
+    const total = await User.countDocuments();
+    const totalPages = Math.ceil(total / limit);
+    const data = {
+      users: users,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+      },
+    };
+    return successHandler(res, data, "Users retrieved successfully");
   } catch (err) {
     return errorHandler(
       "Error fetching users",

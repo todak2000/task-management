@@ -40,18 +40,30 @@ export const getTasks = async (
 ): Promise<any> => {
   try {
     const isValidUser = req.user?.userId; // From auth middleware
-
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
     // Authorization check - users can only perform any action on task if they are autenticated
 
     if (!isValidUser) {
       return errorHandler("Unauthorized", req, res, next, 401, "Unauthorized");
     }
 
-    const tasks = await Task.find({ owner: isValidUser }).populate(
-      "owner",
-      "name email"
-    );
-    return successHandler(res, tasks, "User Tasks retrieved successfully!");
+    const tasks = await Task.find({ owner: isValidUser })
+      .populate("owner", "name email")
+      .skip((page - 1) * limit)
+      .limit(limit);
+    const total = await Task.countDocuments({ owner: isValidUser });
+    const totalPages = Math.ceil(total / limit);
+    const data = {
+      tasks: tasks,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+      },
+    };
+    return successHandler(res, data, "User Tasks retrieved successfully!");
   } catch (error) {
     return errorHandler(error, req, res, next, 500, "An error occurred!");
   }

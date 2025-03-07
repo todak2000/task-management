@@ -84,11 +84,24 @@ router.post("/", validateCreateTask, authMiddleware, createTask);
  * /api/v1/tasks:
  *   get:
  *     summary: Returns a list of Tasks by an authenticated User
- *     description: Retrieve a list of Tasks by an authnticated User
+ *     description: Retrieve a list of Tasks by an authenticated User. Supports pagination with optional query parameters.
  *     tags: [Tasks]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *         description: The page number (optional, default is 1)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           example: 10
+ *         description: The number of tasks per page (optional, default is 10)
  *     responses:
  *       200:
- *         description: Tasks retrieved successful
+ *         description: Tasks retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -99,10 +112,72 @@ router.post("/", validateCreateTask, authMiddleware, createTask);
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: "Tasks retrieved successfully!"
+ *                   example: "User Tasks retrieved successfully!"
  *                 data:
- *                   type: array
- *                   example: []
+ *                   type: object
+ *                   properties:
+ *                     tasks:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: "67cb42a858d0ee947ef188c7"
+ *                           title:
+ *                             type: string
+ *                             example: "Visit a Friend"
+ *                           description:
+ *                             type: string
+ *                             example: "Visit a Friend in details"
+ *                           dueDate:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2025-12-25T00:00:00.000Z"
+ *                           priority:
+ *                             type: string
+ *                             example: "High"
+ *                           owner:
+ *                             type: object
+ *                             properties:
+ *                               _id:
+ *                                 type: string
+ *                                 example: "67ca5e633c2a18ec74a0abf5"
+ *                               name:
+ *                                 type: string
+ *                                 example: "Test User"
+ *                               email:
+ *                                 type: string
+ *                                 example: "test@example.com"
+ *                           status:
+ *                             type: string
+ *                             example: "Pending"
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2025-03-07T19:02:00.712Z"
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2025-03-07T19:02:00.712Z"
+ *                           __v:
+ *                             type: number
+ *                             example: 0
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         total:
+ *                           type: integer
+ *                           example: 1
+ *                         page:
+ *                           type: integer
+ *                           example: 1
+ *                         limit:
+ *                           type: integer
+ *                           example: 10
+ *                         totalPages:
+ *                           type: integer
+ *                           example: 1
  *       400:
  *         description: Invalid input
  *       401:

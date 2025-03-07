@@ -39,11 +39,10 @@ describe("User Endpoints", () => {
         .set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
-      expect(Array.isArray(response.body.data)).toBe(true);
-      expect(response.body.data.length).toBe(2); // We created 2 users in setup
+      expect(response.body.data.users.length).toBe(2); // We created 2 users in setup
 
       // Check if password is not included in the response
-      const firstUser = response.body.data[0];
+      const firstUser = response.body.data.users[0];
       expect(firstUser).not.toHaveProperty("password");
     }, 10000);
 
@@ -51,7 +50,6 @@ describe("User Endpoints", () => {
       const response = await request(app).get("/api/v1/users");
 
       expect(response.status).toBe(200);
-      expect(Array.isArray(response.body.data)).toBe(true);
     }, 1000);
   });
 

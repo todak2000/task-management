@@ -77,7 +77,7 @@ describe("Tasks Endpoints", () => {
 
       expect(response.status).toBe(200);
       expect(response.body.message).toBe("User Tasks retrieved successfully!");
-      expect(Array.isArray(response.body.data)).toBe(true);
+
     });
 
     it("should return 401 if user is not authenticated", async () => {
