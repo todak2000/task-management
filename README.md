@@ -234,7 +234,7 @@ Authorization: Bearer <jwt_token>
 
 **Example**:
 ```bash
-curl -X GET http://localhost:3000/api/v1/users/64c3d1f2b5a2ce6789d1f2b5 \
+curl -X GET http://localhost:3000/api/v1/users/64c3d1f2b5a2ce6789d1f267 \
 -H "Authorization: Bearer your_jwt_token"
 ```
 
