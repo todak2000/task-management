@@ -1,37 +1,46 @@
 import { Request, Response, NextFunction } from 'express';
 
-/**
- * Centralized error handling middleware for Express.js
- * 
- * @param {any} err - Error object from Express
- * @param {Request} req - Express Request object
- * @param {Response} res - Express Response object
- * @param {NextFunction} next - Express NextFunction
- */
-export const errorHandler = (
-  err: any,
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  // Determine the appropriate HTTP status code
-  const statusCode = err.status || err.statusCode || 500;
+// Custom error type definition
+interface ErrorHandlerError extends Error {
+  status?: number;
+  statusCode?: number;
+}
 
-  // Decide what message to show based on environment
-  const message = 
-    process.env.NODE_ENV === 'development' 
-      ? err.message 
-      : 'Something went wrong';
+// Helper function to determine HTTP status code
+const getStatusCode = (err: ErrorHandlerError): number => {
+  return err.status || err.statusCode || 500;
+};
 
-  // Log the error details to the console
+// Helper function for logging errors
+const logError = (err: ErrorHandlerError, statusCode: number) => {
   console.error(
     `[${new Date().toISOString()}]`,
     `Error ${statusCode}: ${err.message}`,
     '\nStack Trace:',
     err.stack
   );
+};
 
-  // Send JSON response with error details
+// Centralized error handling middleware
+export const errorHandler = (
+  err: ErrorHandlerError,
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  // Determine HTTP status code
+  const statusCode = getStatusCode(err);
+
+  // Construct error message based on environment
+  const message = 
+    process.env.NODE_ENV === 'development'
+      ? err.message
+      : 'Something went wrong';
+
+  // Log error details
+  logError(err, statusCode);
+
+  // Send JSON response
   res.status(statusCode).json({
     error: 'Internal Server Error',
     message,
