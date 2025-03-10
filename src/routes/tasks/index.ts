@@ -51,8 +51,8 @@ const router = express.Router();
  *                 type: string
  *                 example: "2025-12-25"
  *               priority:
- *                 type: string
- *                 example: "High"
+ *                 enum: [low, medium, high]
+ *                 example: high
 
  *     responses:
  *       201:
@@ -99,6 +99,18 @@ router.post("/", validateCreateTask, authMiddleware, createTask);
  *           type: integer
  *           example: 10
  *         description: The number of tasks per page (optional, default is 10)
+ *       - in: query
+ *         name: priority
+ *         schema:
+ *           enum: [low, medium, high]
+ *           example: high
+ *         description: Filter by task priority (case-insensitive)
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           enum: [pending, completed]
+ *           example: completed
+ *         description: Filter by task status (case-insensitive)
  *     responses:
  *       200:
  *         description: Tasks retrieved successfully
@@ -136,7 +148,7 @@ router.post("/", validateCreateTask, authMiddleware, createTask);
  *                             example: "2025-12-25T00:00:00.000Z"
  *                           priority:
  *                             type: string
- *                             example: "High"
+ *                             example: "high"
  *                           owner:
  *                             type: object
  *                             properties:
@@ -151,7 +163,7 @@ router.post("/", validateCreateTask, authMiddleware, createTask);
  *                                 example: "test@example.com"
  *                           status:
  *                             type: string
- *                             example: "Pending"
+ *                             example: "pending"
  *                           createdAt:
  *                             type: string
  *                             format: date-time
@@ -263,10 +275,10 @@ router.get("/:id", authMiddleware, getTaskById);
  *                 example: "2025-12-25"
  *               priority:
  *                 type: string
- *                 example: "High"
+ *                 example: "high"
  *               status:
  *                 type: string
- *                 example: "Completed"
+ *                 example: "completed"
  *     responses:
  *       200:
  *         description: Single Task updated successful

@@ -29,9 +29,9 @@ import mongoose, { Schema, Document, Types } from "mongoose";
  *           description: The due date of the task
  *         priority:
  *           type: string
- *           enum: [Low, Medium, High]
+ *           enum: [low, medium, high]
  *           description: The priority level of the task
- *           default: Medium
+ *           default: medium
  *         owner:
  *           type: string
  *           description: The ID of the user who owns the task
@@ -58,13 +58,13 @@ export interface ITask extends Document {
   title: string;
   description: string;
   dueDate: Date;
-  priority: "Low" | "Medium" | "High";
+  priority: "low" | "medium" | "high";
   owner: {
     _id: Types.ObjectId;
     name: string;
     email: string;
   }; // User ID
-  status: "Pending" | "Completed";
+  status: "pending" | "completed";
   createdAt: Date;
 }
 
@@ -75,8 +75,8 @@ const TaskSchema: Schema = new Schema<ITask>(
     dueDate: { type: Date, required: true },
     priority: {
       type: String,
-      enum: ["Low", "Medium", "High"],
-      default: "Medium",
+      enum: ["low", "medium", "high"],
+      default: "medium",
     },
     owner: {
       type: Object,
@@ -85,8 +85,8 @@ const TaskSchema: Schema = new Schema<ITask>(
     },
     status: {
       type: String,
-      enum: ["Pending", "Completed"],
-      default: "Pending",
+      enum: ["pending", "completed"],
+      default: "pending",
     },
     createdAt: { type: Date, default: Date.now },
   },
