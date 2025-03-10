@@ -9,8 +9,8 @@ const createTaskSchema = Joi.object({
   title: Joi.string().required(),
   description: Joi.string().required(),
   dueDate: Joi.date().required(),
-  priority: Joi.string().valid("Low", "Medium", "High").default("Medium"),
-  status: Joi.string().valid("Pending", "Completed").default("Pending"),
+  priority: Joi.string().valid("low", "medium", "high").default("medium"),
+  status: Joi.string().valid("pending", "completed").default("pending"),
 });
 
 // Update task validation
@@ -18,8 +18,8 @@ const updateTaskSchema = Joi.object({
   title: Joi.string(),
   description: Joi.string(),
   dueDate: Joi.date(),
-  priority: Joi.string().valid("Low", "Medium", "High"),
-  status: Joi.string().valid("Pending", "Completed"),
+  priority: Joi.string().valid("low", "medium", "high"),
+  status: Joi.string().valid("pending", "completed"),
 });
 
 // Validation middleware

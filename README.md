@@ -278,7 +278,7 @@ Authorization: Bearer <jwt_token>
   "title": "Complete project report",
   "description": "Write and submit the final project report",
   "dueDate": "2025-12-25T14:30:00Z",
-  "priority": "High"
+  "priority": "high"
 }
 ```
 
@@ -290,9 +290,9 @@ Authorization: Bearer <jwt_token>
 
 - `dueDate` (string, required, ISO 8601 format): The due date of the task.
 
-- `priority` (string, optional): The priority level of the task (`Low`, `Medium`, `High`). Defaults to `Medium`.
+- `priority` (enum, optional): The priority level of the task (`low`, `medium`, `high`). Defaults to `medium`.
 
-- `status` (string, optional): The status of the task (`Pending`, `Completed`). Defaults to `Pending`.
+- `status` (enum, optional): The status of the task (`pending`, `completed`). Defaults to `pending`.
 
 **Responses**:
 - `201 Created`:
@@ -306,8 +306,8 @@ Authorization: Bearer <jwt_token>
     "title": "Complete project report",
     "description": "Write and submit the final project report",
     "dueDate": "2025-12-25T14:30:00.000Z",
-    "priority": "High",
-    "status": "Pending",
+    "priority": "high",
+    "status": "pending",
     "owner": "60d21b4667d0d8992e610c85",
     "createdAt": "2023-12-15T14:29:47.000Z"
    }
@@ -326,7 +326,7 @@ curl -X POST http://localhost:3000/api/v1/tasks \
   "title": "Complete project report",
   "description": "Write and submit the final project report",
   "dueDate": "2025-12-25T14:30:00Z",
-  "priority": "High"
+  "priority": "high"
 }'
 ```
 
@@ -344,7 +344,9 @@ Authorization: Bearer <jwt_token>
 **Query Parameters (optional)**:
 - `page` (number): Page number for pagination. Defaults to `1`.
 - `limit` (number): Number of tasks per page. Defaults to `10`.
+- `priority` (enum, optional): The priority level of the task (`low`, `medium`, `high`). Defaults to `undefined`.
 
+- `status` (enum, optional): The status of the task (`pending`, `completed`). Defaults to `undefined`.
 **Responses**:
 - `200 OK`:
 
@@ -360,13 +362,13 @@ Authorization: Bearer <jwt_token>
                 "title": "Visit a Friend",
                 "description": "Visit a Friend in details",
                 "dueDate": "2025-12-25T00:00:00.000Z",
-                "priority": "High",
+                "priority": "high",
                 "owner": {
                     "_id": "67ca5e633c2a18ec74a0abf5",
                     "name": "Test User",
                     "email": "test@example.com"
                 },
-                "status": "Pending",
+                "status": "pending",
                 "createdAt": "2025-03-07T19:02:00.712Z",
                 "updatedAt": "2025-03-07T19:02:00.712Z",
                 "__v": 0
@@ -395,7 +397,10 @@ curl -X GET http://localhost:3000/api/v1/tasks \
 curl -X GET http://localhost:3000/api/v1/tasks?page=2&limit=20 \
 -H "Authorization: Bearer your_jwt_token"
 ```
-
+```bash
+curl -X GET http://localhost:3000/api/v1/tasks?priority=low&status=completed \
+-H "Authorization: Bearer your_jwt_token"
+```
 
 **Get task by ID**
 `GET /api/v1/tasks/:id`
@@ -423,8 +428,8 @@ Authorization: Bearer <jwt_token>
         "title": "Complete project report",
         "description": "Write and submit the final project report",
         "dueDate": "2025-12-25T14:30:00.000Z",
-        "priority": "High",
-        "status": "Pending",
+        "priority": "high",
+        "status": "pending",
         "owner": "60d21b4667d0d8992e610c85",
         "createdAt": "2023-12-15T14:29:47.000Z"
     }
@@ -460,8 +465,8 @@ Authorization: Bearer <jwt_token>
   "title": "Updated project report",
   "description": "Updated description",
   "dueDate": "2025-12-26T14:30:00Z",
-  "priority": "Medium",
-  "status": "Completed"
+  "priority": "medium",
+  "status": "completed"
 }
 ```
 
@@ -483,8 +488,8 @@ Authorization: Bearer <jwt_token>
         "title": "Complete project report",
         "description": "Write and submit the final project report",
         "dueDate": "2025-12-25T14:30:00.000Z",
-        "priority": "High",
-        "status": "Pending",
+        "priority": "high",
+        "status": "pending",
         "owner": "60d21b4667d0d8992e610c85",
         "createdAt": "2023-12-15T14:29:47.000Z"
     }
@@ -504,8 +509,8 @@ curl -X PUT http://localhost:3000/api/v1/tasks/60d21b4667d0d8992e610c85 \
   "title": "Updated project report",
   "description": "Updated description",
   "dueDate": "2025-12-26T14:30:00Z",
-  "priority": "Medium",
-  "status": "Completed"
+  "priority": "medium",
+  "status": "completed"
 }'
 ```
 

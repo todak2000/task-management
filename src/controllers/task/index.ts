@@ -23,8 +23,8 @@ export const createTask = async (
       title,
       description,
       dueDate,
-      priority,
-      status: "Pending",
+      priority:priority.toLowerCase(),
+      status: "pending",
       owner: isValidUser,
     });
 
@@ -43,23 +43,66 @@ export const getTasks = async (
 ): Promise<void> => {
   try {
     const isValidUser = req.user?.userId; // From auth middleware
+
+    // Pagination parameters
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
-    // Authorization check - users can only perform any action on task if they are autenticated
 
-    if (!isValidUser) {
-      next(errorHandler("Unauthorized", req, res, next, 401, "Unauthorized"));
+    // Optional filters
+    const priorityFilter = req.query.priority?.toString().toLowerCase();
+    const statusFilter = req.query.status?.toString().toLowerCase();
+
+    // Validate priority (allowed: Low, Medium, High)
+    if (priorityFilter && !['low', 'medium', 'high'].includes(priorityFilter)) {
+      next(errorHandler(
+        'Invalid priority',
+        req, res, next,
+        400,
+        'Priority must be one of: low, medium, high'
+      ));
       return;
     }
 
-    const tasks = await Task.find({ owner: isValidUser })
-      .populate("owner", "name email")
+    // Validate status (allowed: Pending, Completed)
+    if (statusFilter && !['pending', 'completed'].includes(statusFilter)) {
+      next(errorHandler(
+        'Invalid status',
+        req, res, next,
+        400,
+        'Status must be one of: Pending, Completed'
+      ));
+      return;
+    }
+
+    // Authorization check
+    if (!isValidUser) {
+      next(errorHandler(
+        'Unauthorized',
+        req, res, next,
+        401,
+        'Authentication required'
+      ));
+      return;
+    }
+
+    // Build query filter
+    const filter: Record<string, any> = { owner: isValidUser };
+    if (priorityFilter) filter.priority = priorityFilter;
+    if (statusFilter) filter.status = statusFilter;
+
+    // Fetch tasks with pagination
+    const tasks = await Task.find(filter)
+      .populate('owner', 'name email')
       .skip((page - 1) * limit)
       .limit(limit);
-    const total = await Task.countDocuments({ owner: isValidUser });
+
+    // Get total count for pagination metadata
+    const total = await Task.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
+
+    // Response format
     const data = {
-      tasks: tasks,
+      tasks,
       pagination: {
         total,
         page,
@@ -67,14 +110,17 @@ export const getTasks = async (
         totalPages,
       },
     };
-    next(successHandler(res, data, "User Tasks retrieved successfully!"));
-    return;
+
+    next(successHandler(res, data, 'Tasks retrieved successfully'));
   } catch (error) {
-    next(errorHandler(error, req, res, next, 500, "An error occurred!"));
-    return;
+    next(errorHandler(
+      error,
+      req, res, next,
+      500,
+      'An error occurred while fetching tasks'
+    ));
   }
 };
-
 export const getTaskById = async (
   req: Request,
   res: Response,
