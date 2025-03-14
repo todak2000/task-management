@@ -14,6 +14,10 @@ A RESTful API for task management with authentication, validation, and role-base
 - Password hashing with bcrypt
 - Input validation using Joi
 - Rate limiting (100 requests/15min)
+- Session Management :
+  - One active session per user to prevent concurrent sessions.
+  - Access and refresh tokens managed via Redis.
+  - Automatic token refresh when the access token expires but the refresh token is still valid.
 
 🚧 **Task Management**
 - CRUD operations for tasks
@@ -27,8 +31,9 @@ A RESTful API for task management with authentication, validation, and role-base
 - **Database**: MongoDB with Mongoose
 - **Auth**: JWT + bcrypt
 - **Validation**: Joi
+- **Session Management** : Redis
 - **Security**: Helmet, CORS
-- **Documentation**: Swagger (OpenAPI)
+- **Documentation**: Swagger (OpenAPI) and Postman
 
 ## Project Structure
 
@@ -51,7 +56,8 @@ src/
 
 1. Node.js 18+
 2. MongoDB instance (local or Atlas)
-3. npm/yarn/pnpm
+3. Redis instance (local or managed)
+4. npm/yarn/pnpm
 
 ### Installation
 
@@ -70,6 +76,10 @@ NODE_ENV=development
 PORT=3000
 MONGO_URI=mongodb://localhost:27017/task-manager
 JWT_SECRET=your-secret-key
+JWT_REFRESH_SECRET=your-refresh-key
+REDIS_HOST=your-redis-host or localhost
+REDIS_PORT=your-redis-port
+REDIS_PASSWORD=your-redis-password
 ```
 
 ### Run the Application
@@ -139,7 +149,7 @@ curl -X POST http://localhost:3000/api/v1/auth/register \
 #### User Login
 **POST /api/v1/auth/login**
 
-Authenticates a user and returns a JWT token
+Authenticates a user and returns access and refresh tokens.
 
 **Request Body**:
 ```json
@@ -170,12 +180,78 @@ curl -X POST http://localhost:3000/api/v1/auth/login \
 -d '{"email": "john@example.com", "password": "SecurePass123!"}'
 ```
 
+#### User Refresh token
+**POST /api/v1/auth/referesh-token**
+
+Refreshes the access token using a valid refresh token.
+
+**Request Body**:
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzI1N..."
+}
+```
+
+**Responses**:
+- `200 OK`:
+
+  ```json
+  {
+    "status": 200,
+    "message": "Access token refreshed successfully!",
+    "data": {
+       "accessToken": "eyJhbGciOiJIUzI1N..."
+    }
+  }
+  ```
+- `400 Bad Request`: Missing credentials
+- `401 Unauthorized`: Session Expired
+- `500 Internal Server Error`: Server error
+
+**Example**:
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/refresh-token \
+-H "Content-Type: application/json" \
+-d '{"refreshToken": "eyJhbGciOiJIUzI1N..."}'
+```
+
+#### User Logout
+**POST /api/v1/auth/logout**
+
+Logs out the user by invalidating their session.
+
+**Headers**:
+```
+Authorization: Bearer <jwt_token>
+```
+
+
+**Responses**:
+- `200 OK`:
+
+  ```json
+  {
+    "status": 200,
+    "message": "User logged out successfully!",
+    "data": null
+  }
+  ```
+- `400 Bad Request`: Missing credentials
+- `401 Unauthorized`: Unauthorized
+- `500 Internal Server Error`: Server error
+
+**Example**:
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/logout \
+-H "Authorization: Bearer your_jwt_token"
+```
+
 ### User Management Endpoints
 
 #### Get All Users
 **GET /api/v1/users**
 
-Retrieves a list of all users
+Retrieves a paginated list of all users.
 
 **Query Parameters (optional)**:
 - `page` (number): Page number for pagination. Defaults to `1`.
@@ -563,17 +639,19 @@ Access interactive docs at:
 ## Best Practices Implemented
 
 ✅ **Security**
-- Helmet for HTTP headers
-- CORS protection
-- Rate limiting
-- Input sanitization
-- JWT-based authentication for all endpoints.
+- HTTPS in production.
+- Passwords hashed with bcrypt.
+- JWT tokens with short expiration times (access: 15 minutes, refresh: 7 days).
+- Rate limiting applied to all endpoints.
+- Helmet middleware for securing HTTP headers.
+- CORS configured to allow specific origins.
+- Session management via Redis to avoid concurrent sessions.
 - Task ownership validation to prevent unauthorized access.
 
 ✅ **Validation**
-- Joi schema validation
-- Centralized error handling
-- Status code consistency
+- Joi schema validation for request payloads.
+- Database-level constraints (e.g., unique email, required fields).
+- Sanitization of user inputs to prevent injection attacks.
 
 ✅ **Pagination**
 - Pagination support for GET All endpoints. - `GET /api/v1/tasks` and `GET /api/v1/users`
@@ -586,7 +664,9 @@ Access interactive docs at:
 
 ✅ **Error Handling**
 - Consistent error responses with appropriate status codes.
+- Centralized error handling with consistent responses.
 - Detailed error messages for debugging.
+- Custom error classes for better clarity.
 
 
 ## Future Enhancements

@@ -1,6 +1,8 @@
 import express from "express";
-import { login, register } from "../../controllers/auth";
+import { login, register, refreshToken, logout } from "../../controllers/auth";
 import validateUser from "../../middleware/validators/validateRegisterData";
+import authMiddleware from "../../middleware/auth";
+
 const router = express.Router();
 
 /**
@@ -15,7 +17,7 @@ const router = express.Router();
  * /api/v1/auth/login:
  *   post:
  *     summary: User login
- *     description: Authenticate a user and return a JWT token
+ *     description: Authenticate a user and return access and refresh tokens
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -49,11 +51,14 @@ const router = express.Router();
  *                   type: string
  *                   example: "Login successful"
  *                 data:
- *                   type: string
+ *                   type: object
  *                   properties:
- *                     token:
+ *                     accessToken:
  *                       type: string
- *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2NhNWU2MzNjMmExOGVjNzRhMGFiZjUiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NDEzMzQyNzYsImV4cCI6MTc0MTMzNjA3Nn0.HtdswPf2hmX-qkazqpycb-FzBK6xhFjEFpLd4D1rDnk"
+ *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                     refreshToken:
+ *                       type: string
+ *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *       400:
  *         description: Invalid input
  *       401:
@@ -90,7 +95,7 @@ router.post("/login", validateUser, login);
  *                 example: john@example.com
  *               password:
  *                 type: string
- *                 example: securepassword123
+ *                 example: Secure123!
  *     responses:
  *       201:
  *         description: User created successfully
@@ -123,5 +128,83 @@ router.post("/login", validateUser, login);
  *         description: Server error
  */
 router.post("/register", validateUser, register);
+
+/**
+ * @swagger
+ * /api/v1/auth/refresh-token:
+ *   post:
+ *     summary: Refresh access token
+ *     description: Use a valid refresh token to obtain a new access token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *     responses:
+ *       200:
+ *         description: Access token refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: number
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Access token refreshed successfully!"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     accessToken:
+ *                       type: string
+ *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       400:
+ *         description: Refresh token is missing
+ *       401:
+ *         description: Invalid or expired refresh token
+ *       500:
+ *         description: Server error
+ */
+router.post("/refresh-token", refreshToken);
+
+/**
+ * @swagger
+ * /api/v1/auth/logout:
+ *   post:
+ *     summary: Logout user
+ *     description: Invalidate the user's refresh token and log them out
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       204:
+ *         description: User logged out successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: number
+ *                   example: 204
+ *                 message:
+ *                   type: string
+ *                   example: "User logged out successfully!"
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
+ *       500:
+ *         description: Server error
+ */
+router.post("/logout", authMiddleware, logout);
 
 export default router;

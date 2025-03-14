@@ -49,7 +49,7 @@ export const errorHandler = (
 
   // Handle other errors
   else {
-    errorMessage = typeof err !== "string" ? errorMessage : err;
+    errorMessage = typeof err !== "string" ? errorMessage : errorMessage??err;
   }
 
   const data = {
