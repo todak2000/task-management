@@ -2,7 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import { errorHandler } from "../../middleware/errorHandler/generalError";
 import Task from "../../models/Task";
 import successHandler from "../../middleware/successHandler";
-
+import User from "../../models/User";
+const ServerError = "Internal Server Error!";
 export const createTask = async (
   req: Request,
   res: Response,
@@ -19,19 +20,40 @@ export const createTask = async (
       return;
     }
 
+    // Fetch the user details from the database
+    const user = await User.findById(isValidUser).select("name email");
+    if (!user) {
+      return next(
+        errorHandler("User not found", req, res, next, 404, "User not found")
+      );
+    }
+
     const newTask = await Task.create({
       title,
       description,
       dueDate,
-      priority:priority.toLowerCase(),
+      priority: priority.toLowerCase(),
       status: "pending",
-      owner: isValidUser,
+      owner: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+      },
     });
 
     next(successHandler(res, newTask, "New Task created successfully!", 201));
     return;
-  } catch (error) {
-    next(errorHandler(error, req, res, next, 500, "An error occurred!"));
+  } catch (error: any) {
+    next(
+      errorHandler(
+        error.message.replace(/[^a-zA-Z0-9\s\(\)-]/g, ""),
+        req,
+        res,
+        next,
+        500,
+        ServerError
+      )
+    );
     return;
   }
 };
@@ -53,46 +75,58 @@ export const getTasks = async (
     const statusFilter = req.query.status?.toString().toLowerCase();
 
     // Validate priority (allowed: Low, Medium, High)
-    if (priorityFilter && !['low', 'medium', 'high'].includes(priorityFilter)) {
-      next(errorHandler(
-        'Invalid priority',
-        req, res, next,
-        400,
-        'Priority must be one of: low, medium, high'
-      ));
+    if (priorityFilter && !["low", "medium", "high"].includes(priorityFilter)) {
+      next(
+        errorHandler(
+          "Invalid priority",
+          req,
+          res,
+          next,
+          400,
+          "Priority must be one of: low, medium, high"
+        )
+      );
       return;
     }
 
     // Validate status (allowed: Pending, Completed)
-    if (statusFilter && !['pending', 'completed'].includes(statusFilter)) {
-      next(errorHandler(
-        'Invalid status',
-        req, res, next,
-        400,
-        'Status must be one of: Pending, Completed'
-      ));
+    if (statusFilter && !["pending", "completed"].includes(statusFilter)) {
+      next(
+        errorHandler(
+          "Invalid status",
+          req,
+          res,
+          next,
+          400,
+          "Status must be one of: Pending, Completed"
+        )
+      );
       return;
     }
 
     // Authorization check
     if (!isValidUser) {
-      next(errorHandler(
-        'Unauthorized',
-        req, res, next,
-        401,
-        'Authentication required'
-      ));
+      next(
+        errorHandler(
+          "Unauthorized",
+          req,
+          res,
+          next,
+          401,
+          "Authentication required"
+        )
+      );
       return;
     }
 
     // Build query filter
-    const filter: Record<string, any> = { owner: isValidUser };
+    const filter: Record<string, any> = { "owner._id": isValidUser };
     if (priorityFilter) filter.priority = priorityFilter;
     if (statusFilter) filter.status = statusFilter;
 
     // Fetch tasks with pagination
     const tasks = await Task.find(filter)
-      .populate('owner', 'name email')
+      .populate("owner", "name email")
       .skip((page - 1) * limit)
       .limit(limit);
 
@@ -111,14 +145,19 @@ export const getTasks = async (
       },
     };
 
-    next(successHandler(res, data, 'Tasks retrieved successfully'));
-  } catch (error) {
-    next(errorHandler(
-      error,
-      req, res, next,
-      500,
-      'An error occurred while fetching tasks'
-    ));
+    next(successHandler(res, data, "Tasks retrieved successfully"));
+  } catch (error: any) {
+    next(
+      errorHandler(
+        error.message.replace(/[^a-zA-Z0-9\s\(\)-]/g, ""),
+        req,
+        res,
+        next,
+        500,
+        ServerError
+      )
+    );
+    return;
   }
 };
 export const getTaskById = async (
@@ -165,8 +204,17 @@ export const getTaskById = async (
 
     next(successHandler(res, task, "Single Task retrieved successfully!"));
     return;
-  } catch (error) {
-    next(errorHandler(error, req, res, next, 500, "An error occurred!"));
+  } catch (error: any) {
+    next(
+      errorHandler(
+        error.message.replace(/[^a-zA-Z0-9\s\(\)-]/g, ""),
+        req,
+        res,
+        next,
+        500,
+        ServerError
+      )
+    );
     return;
   }
 };
@@ -197,7 +245,7 @@ export const updateTask = async (
       return;
     }
 
-    if (task?.owner.toString() !== isValidUser) {
+    if (task.owner._id.toString() !== isValidUser) {
       const err = "Unauthorized to update this task";
       next(errorHandler(err, req, res, next, 401, err));
       return;
@@ -208,8 +256,17 @@ export const updateTask = async (
 
     next(successHandler(res, task, "Single Task updated successfully!"));
     return;
-  } catch (error) {
-    next(errorHandler(error, req, res, next, 500, "An error occurred!"));
+  } catch (error: any) {
+    next(
+      errorHandler(
+        error.message.replace(/[^a-zA-Z0-9\s\(\)-]/g, ""),
+        req,
+        res,
+        next,
+        500,
+        ServerError
+      )
+    );
     return;
   }
 };
@@ -238,17 +295,26 @@ export const deleteTask = async (
       return;
     }
 
-    if (task?.owner.toString() !== isValidUser) {
+    if (task?.owner._id.toString() !== isValidUser) {
       const err = "Unauthorized to delete this task";
       next(errorHandler(err, req, res, next, 401, err));
       return;
     }
 
     await Task.findByIdAndDelete(taskId);
-    next(successHandler(res, null, "Single Task deleted successfully!", 204));
+    next(successHandler(res, null, "Single Task deleted successfully!", 200));
     return;
-  } catch (error) {
-    next(errorHandler(error, req, res, next, 500, "An error occurred!"));
+  } catch (error: any) {
+    next(
+      errorHandler(
+        error.message.replace(/[^a-zA-Z0-9\s\(\)-]/g, ""),
+        req,
+        res,
+        next,
+        500,
+        ServerError
+      )
+    );
     return;
   }
 };

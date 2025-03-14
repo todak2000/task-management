@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import authMiddleware from "../middleware/auth";
 import jwt from "jsonwebtoken";
 import jwtConfig from "../config/jwt";
+import redisClient from "../config/redis";
 
 // Mock the UserPayload interface
 interface UserPayload {
@@ -32,8 +33,13 @@ describe("Auth Middleware", () => {
     mockResponse = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
+      setHeader: jest.fn(), // For testing automatic token refresh
     };
     nextFunction = jest.fn();
+
+    // Mock Redis client methods
+    jest.spyOn(redisClient, "get").mockResolvedValue(null);
+    jest.spyOn(redisClient, "set").mockResolvedValue("OK");
   });
 
   afterEach(() => {
@@ -42,17 +48,23 @@ describe("Auth Middleware", () => {
 
   // Helper function to create a valid token
   const createValidToken = (payload: UserPayload) => {
-    return jwt.sign(payload, jwtConfig.secret);
+    return jwt.sign(payload, jwtConfig.secret, { expiresIn: "15m" });
   };
 
   describe("Valid Token", () => {
-    test("should pass when valid token is provided", () => {
+    test("should pass when valid token is provided and matches Redis", async () => {
       // Arrange
       const userPayload: UserPayload = {
         userId: "user123",
         email: "user@example.com",
       };
       const token = createValidToken(userPayload);
+
+      // Mock Redis to return the token
+      jest
+        .spyOn(redisClient, "get")
+        .mockResolvedValue(JSON.stringify({ accessToken: token }));
+
       mockRequest = {
         headers: {
           authorization: `Bearer ${token}`,
@@ -60,7 +72,7 @@ describe("Auth Middleware", () => {
       };
 
       // Act
-      authMiddleware(
+      await authMiddleware(
         mockRequest as AuthenticatedRequest,
         mockResponse as Response,
         nextFunction
@@ -74,26 +86,28 @@ describe("Auth Middleware", () => {
   });
 
   describe("Invalid Token Cases", () => {
-    test("should throw error when no token is provided", () => {
+    test("should throw error when no token is provided", async () => {
       // Arrange
       mockRequest = {
         headers: {},
       };
 
-      try {
-        authMiddleware(
-          mockRequest as AuthenticatedRequest,
-          mockResponse as Response,
-          nextFunction
-        );
-      } catch (error: unknown) {
-        const customError = error as CustomError;
-        expect(customError.status).toBe(401);
-        expect(customError.message).toBe("Access denied. No token provided.");
-      }
+      // Act
+      await authMiddleware(
+        mockRequest as AuthenticatedRequest,
+        mockResponse as Response,
+        nextFunction
+      );
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        status: 401,
+        message: "Access denied. No token provided.",
+      });
     });
 
-    test("should throw error when token format is invalid", () => {
+    test("should throw error when token format is invalid", async () => {
       // Arrange
       mockRequest = {
         headers: {
@@ -101,22 +115,22 @@ describe("Auth Middleware", () => {
         },
       };
 
-      try {
-        authMiddleware(
-          mockRequest as AuthenticatedRequest,
-          mockResponse as Response,
-          nextFunction
-        );
-      } catch (error: unknown) {
-        const customError = error as CustomError;
-        expect(customError.status).toBe(401);
-        expect(customError.message).toBe(
-          "Invalid token format. Use Bearer token."
-        );
-      }
+      // Act
+      await authMiddleware(
+        mockRequest as AuthenticatedRequest,
+        mockResponse as Response,
+        nextFunction
+      );
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        status: 401,
+        message: "Invalid token format. Use Bearer token.",
+      });
     });
 
-    test("should throw error when token is invalid", () => {
+    test("should throw error when token is invalid", async () => {
       // Arrange
       const invalidToken = "invalid.token.string";
       mockRequest = {
@@ -125,51 +139,115 @@ describe("Auth Middleware", () => {
         },
       };
 
-      // Mock JWT verification to fail
-      jest.spyOn(jwt, "verify").mockImplementation(() => {
-        throw new Error("Invalid token.");
-      });
+      // Act
+      await authMiddleware(
+        mockRequest as AuthenticatedRequest,
+        mockResponse as Response,
+        nextFunction
+      );
 
-      try {
-        authMiddleware(
-          mockRequest as AuthenticatedRequest,
-          mockResponse as Response,
-          nextFunction
-        );
-      } catch (error: unknown) {
-        const customError = error as CustomError;
-        expect(customError.status).toBe(401);
-        expect(customError.message).toBe("Invalid token.");
-      }
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        status: 401,
+        message: "Invalid token.",
+      });
+    });
+
+    test("should throw error when token is not found in Redis", async () => {
+      // Arrange
+      const userPayload: UserPayload = {
+        userId: "user123",
+        email: "user@example.com",
+      };
+      const token = createValidToken(userPayload);
+
+      // Mock Redis to return null (token not found)
+      jest.spyOn(redisClient, "get").mockResolvedValue(null);
+
+      mockRequest = {
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
+      };
+
+      // Act
+      await authMiddleware(
+        mockRequest as AuthenticatedRequest,
+        mockResponse as Response,
+        nextFunction
+      );
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        status: 401,
+        message: "Session expired or invalid token.",
+      });
+    });
+
+    test("should throw error when token does not match Redis", async () => {
+      // Arrange
+      const userPayload: UserPayload = {
+        userId: "user123",
+        email: "user@example.com",
+      };
+      const token = createValidToken(userPayload);
+
+      // Mock Redis to return a different token
+      jest
+        .spyOn(redisClient, "get")
+        .mockResolvedValue(JSON.stringify({ accessToken: "different-token" }));
+
+      mockRequest = {
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
+      };
+
+      // Act
+      await authMiddleware(
+        mockRequest as AuthenticatedRequest,
+        mockResponse as Response,
+        nextFunction
+      );
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        status: 401,
+        message: "Invalid or expired access token.",
+      });
     });
   });
 
   describe("JWT Verification Failure", () => {
-    test("should handle expired tokens", () => {
+    test("should handle expired tokens", async () => {
       // Arrange
-      const expiredToken = "expired_token";
+      const expiredToken = jwt.sign(
+        { userId: "user123", email: "user@example.com" },
+        jwtConfig.secret,
+        { expiresIn: "-1s" } // Expired token
+      );
       mockRequest = {
         headers: {
           authorization: `Bearer ${expiredToken}`,
         },
       };
 
-      // Mock JWT verification to throw error
-      jest.spyOn(jwt, "verify").mockImplementation(() => {
-        throw new Error("jwt expired.");
-      });
+      // Act
+      await authMiddleware(
+        mockRequest as AuthenticatedRequest,
+        mockResponse as Response,
+        nextFunction
+      );
 
-      try {
-        authMiddleware(
-          mockRequest as AuthenticatedRequest,
-          mockResponse as Response,
-          nextFunction
-        );
-      } catch (error: unknown) {
-        const customError = error as CustomError;
-        expect(customError.status).toBe(401);
-        expect(customError.message).toBe("jwt expired.");
-      }
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(401);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        status: 401,
+        message: "Invalid token.",
+      });
     });
   });
 });

@@ -320,7 +320,7 @@ router.put("/:id", validateUpdateTask, authMiddleware, updateTask);
  *         required: true
  *         description: The Task id
  *     responses:
- *       204:
+ *       200:
  *         description: Single Task deleted successful
  *         content:
  *           application/json:

@@ -43,7 +43,7 @@ export const errorHandler = (
 
   // Send JSON response
   res.status(statusCode).json({
-    error: "Internal Server Error",
+    error: statusCode.toString().startsWith('4')?"Bad Request":"Internal Server Error",
     message,
     ...(process.env.NODE_ENV === "development" && { details: err }),
   });

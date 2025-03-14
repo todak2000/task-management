@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import User from "../../models/User";
 import { errorHandler } from "../../middleware/errorHandler/generalError";
 import successHandler from "../../middleware/successHandler";
+const ServerError = "Internal Server Error!";
 export const getUsers = async (
   req: Request,
   res: Response,
@@ -29,19 +30,19 @@ export const getUsers = async (
     };
 
     next(successHandler(res, data, "Users retrieved successfully"));
-    return
-  } catch (err) {
+    return;
+  } catch (error: any) {
     next(
       errorHandler(
-        "Error fetching users",
+        error.message.replace(/[^a-zA-Z0-9\s\(\)-]/g, ""),
         req,
         res,
         next,
         500,
-        "Error fetching users"
+        ServerError
       )
     );
-    return
+    return;
   }
 };
 
@@ -63,7 +64,7 @@ export const getUserById = async (
           "Access denied. You can only view your own profile."
         )
       );
-      return
+      return;
     }
 
     const user = await User.findById(req.params.id).select(
@@ -73,22 +74,22 @@ export const getUserById = async (
       next(
         errorHandler("User not found", req, res, next, 404, "User not found")
       );
-      return
+      return;
     }
 
     next(successHandler(res, user, "User details retrieved"));
-    return
-  } catch (err) {
+    return;
+  } catch (error: any) {
     next(
       errorHandler(
-        "Error fetching user",
+        error.message.replace(/[^a-zA-Z0-9\s\(\)-]/g, ""),
         req,
         res,
         next,
         500,
-        "Error fetching user"
+        ServerError
       )
     );
-    return
+    return;
   }
 };

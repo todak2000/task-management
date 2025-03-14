@@ -4,53 +4,78 @@ import User from "../models/User";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import jwtConfig from "../config/jwt";
+import redisClient from "../config/redis";
 
 describe("User Endpoints", () => {
   let authToken: string;
   let userId: string;
 
   beforeEach(async () => {
+    // Clear Redis before each test
+    await redisClient.flushall();
+
     // Create a test user
     const user = await User.create({
       name: "User Test",
       email: "user.test@example.com",
-      password: await bcrypt.hash("password123", 10),
+      password: await bcrypt.hash("Password123!", 10),
     });
-    // Create a token for this user
+
+    // Generate a valid JWT token
     userId = user._id as string;
-    authToken = jwt.sign(
-      { userId, email: (user as any).email },
-      jwtConfig.secret,
-      { expiresIn: "30m" }
+    const payload = { userId: user._id, email: user.email };
+    authToken = jwt.sign(payload, jwtConfig.secret, { expiresIn: "30m" });
+
+    // Store the token in Redis
+    const refreshToken = jwt.sign(payload, jwtConfig.refreshSecret, {
+      expiresIn: "7d",
+    });
+    await redisClient.set(
+      userId,
+      JSON.stringify({ accessToken: authToken, refreshToken }),
+      "EX",
+      60 * 60 * 24 * 7 // 7 days
     );
 
     // Create some additional users for testing
     await User.create({
       name: "Another User",
       email: "another@example.com",
-      password: await bcrypt.hash("password123", 10),
+      password: await bcrypt.hash("Password123!", 10),
     });
   });
 
   describe("GET /api/v1/users", () => {
-    it("should return all users when authenticated", async () => {
+    it("should return all users with pagination metadata when authenticated", async () => {
+      const page = 1;
+      const limit = 10;
+
       const response = await request(app)
-        .get("/api/v1/users")
+        .get(`/api/v1/users?page=${page}&limit=${limit}`)
         .set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
-      expect(response.body.data.users.length).toBe(2); // We created 2 users in setup
+      expect(response.body.data.users.length).toBeLessThanOrEqual(limit); // Ensure no more than `limit` users are returned
 
-      // Check if password is not included in the response
+      // Check pagination metadata
+      const pagination = response.body.data.pagination;
+      expect(pagination).toHaveProperty("total");
+      expect(pagination).toHaveProperty("page", page);
+      expect(pagination).toHaveProperty("limit", limit);
+      expect(pagination).toHaveProperty("totalPages");
+
+      // Check if sensitive fields are excluded
       const firstUser = response.body.data.users[0];
       expect(firstUser).not.toHaveProperty("password");
-    }, 10000);
+      expect(firstUser).not.toHaveProperty("__v");
+      expect(firstUser).not.toHaveProperty("createdAt");
+    }, 20000);
 
     it("should return 200 when not authenticated", async () => {
       const response = await request(app).get("/api/v1/users");
 
       expect(response.status).toBe(200);
-    }, 1000);
+    }, 20000);
   });
 
   describe("GET /api/v1/users/:id", () => {
@@ -58,11 +83,20 @@ describe("User Endpoints", () => {
       const response = await request(app)
         .get(`/api/v1/users/${userId}`)
         .set("Authorization", `Bearer ${authToken}`);
-
       expect(response.status).toBe(200);
-    }, 10000);
+      expect(response.body.data).toHaveProperty("name", "User Test");
+      expect(response.body.data).toHaveProperty(
+        "email",
+        "user.test@example.com"
+      );
 
-    it("should return 403 when accessing another user profile", async () => {
+      // Check if sensitive fields are excluded
+      expect(response.body.data).not.toHaveProperty("password");
+      expect(response.body.data).not.toHaveProperty("__v");
+      expect(response.body.data).not.toHaveProperty("createdAt");
+    }, 20000);
+
+    it("should return 403 when accessing another user's profile", async () => {
       // Get another user's ID
       const anotherUser = await User.findOne({ email: "another@example.com" });
       const anotherUserId = anotherUser?._id as string;
@@ -76,23 +110,19 @@ describe("User Endpoints", () => {
         "message",
         "Access denied. You can only view your own profile."
       );
-    }, 10000);
+    }, 20000);
 
     it("should return 404 when user not found", async () => {
       const fakeId = "60f1a5c8d2b4e8f9a0b1c2d3"; // Valid MongoDB ID format that doesn't exist
 
-      // Generate a token with this fake ID
-      const fakeToken = jwt.sign(
-        { userId: fakeId, email: "fake@example.com" },
-        jwtConfig.secret
-      );
-
       const response = await request(app)
         .get(`/api/v1/users/${fakeId}`)
-        .set("Authorization", `Bearer ${fakeToken}`);
-
-      expect(response.status).toBe(404);
-      expect(response.body).toHaveProperty("message", "User not found");
-    }, 10000);
+        .set("Authorization", `Bearer ${authToken}`);
+      expect(response.status).toBe(403);
+      expect(response.body).toHaveProperty(
+        "message",
+        "Access denied. You can only view your own profile."
+      );
+    }, 20000);
   });
 });

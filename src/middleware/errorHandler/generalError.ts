@@ -20,7 +20,6 @@ interface JoiValidationError extends Error {
 
 // Define a type for the error parameter
 type ErrorType = ApiError | JoiValidationError | Error | string | unknown;
-
 export const errorHandler = (
   err: ErrorType,
   req: Request,
@@ -28,7 +27,7 @@ export const errorHandler = (
   next: NextFunction,
   code?: number,
   message?: string
-): Response => {
+): void => {
   let status = code ?? 500;
   let errorMessage = message ?? "Internal Server Error";
 
@@ -38,7 +37,7 @@ export const errorHandler = (
     errorMessage = err.message;
   }
   // Handle celebrate validation errors
-  else if ((err as JoiValidationError) && (err as JoiValidationError)?.isJoi) {
+  else if ((err as JoiValidationError)?.isJoi) {
     status = 400;
     errorMessage = (err as JoiValidationError)?.details
       ? ((err as JoiValidationError)?.details
@@ -46,7 +45,6 @@ export const errorHandler = (
           .join(", ") as string)
       : "Validation failed";
   }
-
   // Handle other errors
   else {
     errorMessage = typeof err !== "string" ? errorMessage : err;
@@ -57,6 +55,9 @@ export const errorHandler = (
     message: errorMessage,
     ...(process.env.NODE_ENV === "development" && { error: err }),
   };
-  // Always return JSON with status, message, and optional error details
-  return res.status(status).json(data);
+
+  // Check if headers have already been sent
+  if (!res.headersSent) {
+    res.status(status).json(data);
+  }
 };
