@@ -32,10 +32,7 @@ export const errorHandler = (
   const statusCode = getStatusCode(err);
 
   // Construct error message based on environment
-  const message =
-    process.env.NODE_ENV === "development"
-      ? err.message
-      : "Something went wrong";
+  const message = err.message
 
   // Log error details
 
