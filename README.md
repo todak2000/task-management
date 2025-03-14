@@ -80,6 +80,7 @@ JWT_REFRESH_SECRET=your-refresh-key
 REDIS_HOST=your-redis-host or localhost
 REDIS_PORT=your-redis-port
 REDIS_PASSWORD=your-redis-password
+REDIS_USERNAME=your-redis-username
 ```
 
 ### Run the Application
