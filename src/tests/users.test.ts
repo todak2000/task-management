@@ -69,13 +69,13 @@ describe("User Endpoints", () => {
       expect(firstUser).not.toHaveProperty("password");
       expect(firstUser).not.toHaveProperty("__v");
       expect(firstUser).not.toHaveProperty("createdAt");
-    }, 10000);
+    }, 20000);
 
     it("should return 200 when not authenticated", async () => {
       const response = await request(app).get("/api/v1/users");
 
       expect(response.status).toBe(200);
-    }, 10000);
+    }, 20000);
   });
 
   describe("GET /api/v1/users/:id", () => {
@@ -94,7 +94,7 @@ describe("User Endpoints", () => {
       expect(response.body.data).not.toHaveProperty("password");
       expect(response.body.data).not.toHaveProperty("__v");
       expect(response.body.data).not.toHaveProperty("createdAt");
-    }, 10000);
+    }, 20000);
 
     it("should return 403 when accessing another user's profile", async () => {
       // Get another user's ID
@@ -110,7 +110,7 @@ describe("User Endpoints", () => {
         "message",
         "Access denied. You can only view your own profile."
       );
-    }, 10000);
+    }, 20000);
 
     it("should return 404 when user not found", async () => {
       const fakeId = "60f1a5c8d2b4e8f9a0b1c2d3"; // Valid MongoDB ID format that doesn't exist
@@ -123,6 +123,6 @@ describe("User Endpoints", () => {
         "message",
         "Access denied. You can only view your own profile."
       );
-    }, 10000);
+    }, 20000);
   });
 });

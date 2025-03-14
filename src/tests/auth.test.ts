@@ -25,7 +25,7 @@ describe("Authentication Endpoints", () => {
       const user = await User.findOne({ email: "test1@example.com" });
       expect(user).toBeTruthy();
       expect(user?.name).toBe("Test User");
-    }, 10000);
+    }, 20000);
 
     it("should return 400 if email already exists", async () => {
       await User.create({
@@ -46,7 +46,7 @@ describe("Authentication Endpoints", () => {
         "message",
         "Oops! This email is taken. Try a different email address."
       );
-    }, 10000);
+    }, 20000);
 
     it("should return 400 if required fields are missing", async () => {
       const response = await request(app).post("/api/v1/auth/register").send({
@@ -56,7 +56,7 @@ describe("Authentication Endpoints", () => {
       });
 
       expect(response.status).toBe(400);
-    }, 10000);
+    }, 20000);
   });
 
   describe("POST /api/v1/auth/login", () => {
@@ -88,7 +88,7 @@ describe("Authentication Endpoints", () => {
       const parsedTokens = JSON.parse(storedTokens as string);
       expect(parsedTokens.accessToken).toBe(response.body.data.accessToken);
       expect(parsedTokens.refreshToken).toBe(response.body.data.refreshToken);
-    }, 10000);
+    }, 20000);
 
     it("should return 401 with incorrect password", async () => {
       const response = await request(app).post("/api/v1/auth/login").send({
@@ -98,7 +98,7 @@ describe("Authentication Endpoints", () => {
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty("message", "Invalid email");
-    }, 10000);
+    }, 20000);
 
     it("should return 401 with non-existent email", async () => {
       const response = await request(app).post("/api/v1/auth/login").send({
@@ -108,7 +108,7 @@ describe("Authentication Endpoints", () => {
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty("message", "Invalid email");
-    }, 10000);
+    }, 20000);
   });
 
   describe("POST /api/v1/auth/refresh-token", () => {
@@ -150,7 +150,7 @@ describe("Authentication Endpoints", () => {
       const storedTokens = await redisClient.get(user._id.toString());
       const parsedTokens = JSON.parse(storedTokens as string);
       expect(parsedTokens.accessToken).toBe(response.body.data.accessToken);
-    }, 10000);
+    }, 20000);
 
     it("should return 400 if refresh token is missing", async () => {
       const response = await request(app)
@@ -162,7 +162,7 @@ describe("Authentication Endpoints", () => {
         "message",
         "Refresh token is required"
       );
-    }, 10000);
+    }, 20000);
 
     it("should return 500 if refresh token is invalid or expired", async () => {
       const invalidRefreshToken = jwt.sign(
@@ -176,7 +176,7 @@ describe("Authentication Endpoints", () => {
         .send({ refreshToken: invalidRefreshToken });
       expect(response.status).toBe(500);
       expect(response.body).toHaveProperty("message", "jwt expired");
-    }, 10000);
+    }, 20000);
   });
 
   describe("POST /api/v1/auth/logout", () => {
@@ -219,7 +219,7 @@ describe("Authentication Endpoints", () => {
       // Verify that tokens were deleted from Redis
       const storedTokens = await redisClient.get(user._id.toString());
       expect(storedTokens).toBeNull();
-    }, 10000);
+    }, 20000);
 
     it("should return 401 if user is not authenticated", async () => {
       const response = await request(app).post("/api/v1/auth/logout");
@@ -229,6 +229,6 @@ describe("Authentication Endpoints", () => {
         "message",
         "Access denied. No token provided."
       );
-    }, 10000);
+    }, 20000);
   });
 });

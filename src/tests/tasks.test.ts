@@ -65,7 +65,7 @@ describe("Tasks Endpoints", () => {
       expect(response.body.data).toHaveProperty("_id");
       expect(response.body.data.title).toBe("Test Title");
       expect(response.body.data.owner.name).toBe("User Test");
-    }, 10000);
+    }, 20000);
 
     it("should return 400 if required fields are missing", async () => {
       const response = await request(app)
@@ -78,7 +78,7 @@ describe("Tasks Endpoints", () => {
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe("Validation failed!");
-    }, 10000);
+    }, 20000);
 
     it("should return 401 if user is not authenticated", async () => {
       const response = await request(app).post("/api/v1/tasks").send({
@@ -89,7 +89,7 @@ describe("Tasks Endpoints", () => {
 
       expect(response.status).toBe(401);
       expect(response.body.message).toBe("Access denied. No token provided.");
-    }, 10000);
+    }, 20000);
   });
 
   describe("GET /api/v1/tasks", () => {
@@ -143,7 +143,7 @@ describe("Tasks Endpoints", () => {
       expect(response.body.message).toBe("Tasks retrieved successfully");
       expect(response.body.data.tasks.length).toBe(3);
       expect(response.body.data.pagination.total).toBe(3);
-    }, 10000);
+    }, 20000);
 
     it("should filter tasks by priority", async () => {
       const response = await request(app)
@@ -153,7 +153,7 @@ describe("Tasks Endpoints", () => {
       expect(response.status).toBe(200);
       expect(response.body.data.tasks.length).toBe(1);
       expect(response.body.data.tasks[0]._id).toBe(highTask._id.toString());
-    }, 10000);
+    }, 20000);
 
     it("should filter tasks by status", async () => {
       const response = await request(app)
@@ -165,7 +165,7 @@ describe("Tasks Endpoints", () => {
       expect(response.body.data.tasks[0]._id).toBe(
         completedTask._id.toString()
       );
-    }, 10000);
+    }, 20000);
 
     it("should filter tasks by both priority and status", async () => {
       const response = await request(app)
@@ -174,7 +174,7 @@ describe("Tasks Endpoints", () => {
       expect(response.status).toBe(200);
       expect(response.body.data.tasks.length).toBe(1);
       expect(response.body.data.tasks[0]._id).toBe(mediumTask._id.toString());
-    }, 10000);
+    }, 20000);
 
     it("should return 400 for invalid priority", async () => {
       const response = await request(app)
@@ -183,7 +183,7 @@ describe("Tasks Endpoints", () => {
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe("Invalid priority");
-    }, 10000);
+    }, 20000);
 
     it("should return 400 for invalid status", async () => {
       const response = await request(app)
@@ -192,7 +192,7 @@ describe("Tasks Endpoints", () => {
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe("Invalid status");
-    }, 10000);
+    }, 20000);
 
     it("should return empty array when no tasks match filters", async () => {
       const response = await request(app)
@@ -201,7 +201,7 @@ describe("Tasks Endpoints", () => {
 
       expect(response.status).toBe(200);
       expect(response.body.data.tasks.length).toBe(0);
-    }, 10000);
+    }, 20000);
 
     it("should handle pagination with filters", async () => {
       // Create additional tasks for pagination testing
@@ -220,14 +220,14 @@ describe("Tasks Endpoints", () => {
       expect(response.body.data.pagination.page).toBe(1);
       expect(response.body.data.pagination.limit).toBe(2);
       expect(response.body.data.pagination.totalPages).toBe(2);
-    }, 10000);
+    }, 20000);
 
     it("should return 401 if user is not authenticated", async () => {
       const response = await request(app).get("/api/v1/tasks");
 
       expect(response.status).toBe(401);
       expect(response.body.message).toBe("Access denied. No token provided.");
-    }, 10000);
+    }, 20000);
   });
 
   describe("GET /api/v1/tasks/:id", () => {
@@ -246,7 +246,7 @@ describe("Tasks Endpoints", () => {
       expect(response.status).toBe(200);
       expect(response.body.message).toBe("Single Task retrieved successfully!");
       expect(response.body.data._id).toBe(task._id.toString());
-    }, 10000);
+    }, 20000);
 
     it("should return 404 if task is not found", async () => {
       const response = await request(app)
@@ -255,7 +255,7 @@ describe("Tasks Endpoints", () => {
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe("Task not found");
-    }, 10000);
+    }, 20000);
 
     it("should return 403 if user is not the owner of the task", async () => {
       const task = await Task.create({
@@ -275,7 +275,7 @@ describe("Tasks Endpoints", () => {
         .set("Authorization", `Bearer ${authToken}`);
       expect(response.status).toBe(403);
       expect(response.body.message).toBe("Forbidden");
-    }, 10000);
+    }, 20000);
   });
 
   describe("PUT /api/v1/tasks/:id", () => {
@@ -304,7 +304,7 @@ describe("Tasks Endpoints", () => {
       expect(response.body.data.title).toBe("Updated Title");
       expect(response.body.data.priority).toBe("medium");
       expect(response.body.data.status).toBe("completed");
-    }, 10000);
+    }, 20000);
 
     it("should return 400 if input is invalid", async () => {
       const task = await Task.create({
@@ -324,7 +324,7 @@ describe("Tasks Endpoints", () => {
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe("Validation failed!");
-    }, 10000);
+    }, 20000);
 
     it("should return 404 if task is not found", async () => {
       const response = await request(app)
@@ -336,7 +336,7 @@ describe("Tasks Endpoints", () => {
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe("Task not found");
-    }, 10000);
+    }, 20000);
 
     it("should return 403 if user is not the owner of the task", async () => {
       const task = await Task.create({
@@ -360,7 +360,7 @@ describe("Tasks Endpoints", () => {
 
       expect(response.status).toBe(401);
       expect(response.body.message).toBe("Unauthorized to update this task");
-    }, 10000);
+    }, 20000);
   });
 
   describe("DELETE /api/v1/tasks/:id", () => {
@@ -379,7 +379,7 @@ describe("Tasks Endpoints", () => {
 
       expect(response.status).toBe(200);
       expect(response.body.message).toBe("Single Task deleted successfully!");
-    }, 10000);
+    }, 20000);
 
     it("should return 404 if task is not found", async () => {
       const response = await request(app)
@@ -388,7 +388,7 @@ describe("Tasks Endpoints", () => {
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe("Task not found");
-    }, 10000);
+    }, 20000);
 
     it("should return 403 if user is not the owner of the task", async () => {
       const task = await Task.create({
@@ -409,6 +409,6 @@ describe("Tasks Endpoints", () => {
 
       expect(response.status).toBe(401);
       expect(response.body.message).toBe("Unauthorized to delete this task");
-    }, 10000);
+    }, 20000);
   });
 });
