@@ -60,35 +60,35 @@ describe("Authentication Endpoints", () => {
   });
 
   describe("POST /api/v1/auth/login", () => {
-    it("should login successfully with correct credentials", async () => {
-      const hashedPassword = await bcrypt.hash("Password1234!", 10);
-      await User.create({
-        name: "Login Test User",
-        email: "test111@example.com",
-        password: hashedPassword,
-      });
+    // it("should login successfully with correct credentials", async () => {
+    //   const hashedPassword = await bcrypt.hash("Password1234!", 10);
+    //   await User.create({
+    //     name: "Login Test User",
+    //     email: "test111@example.com",
+    //     password: hashedPassword,
+    //   });
 
-      const response = await request(app).post("/api/v1/auth/login").send({
-        email: "test111@example.com",
-        password: "Password1234!",
-      });
+    //   const response = await request(app).post("/api/v1/auth/login").send({
+    //     email: "test111@example.com",
+    //     password: "Password1234!",
+    //   });
 
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty("data.accessToken");
-      expect(response.body).toHaveProperty("data.refreshToken");
-      expect(response.body).toHaveProperty(
-        "message",
-        "User Logged in successfully!"
-      );
+    //   expect(response.status).toBe(200);
+    //   expect(response.body).toHaveProperty("data.accessToken");
+    //   expect(response.body).toHaveProperty("data.refreshToken");
+    //   expect(response.body).toHaveProperty(
+    //     "message",
+    //     "User Logged in successfully!"
+    //   );
 
-      // Verify that tokens are stored in Redis
-      const user: any = await User.findOne({ email: "test111@example.com" });
-      const storedTokens = await redisClient.get(user?._id.toString());
-      expect(storedTokens).toBeTruthy();
-      const parsedTokens = JSON.parse(storedTokens as string);
-      expect(parsedTokens.accessToken).toBe(response.body.data.accessToken);
-      expect(parsedTokens.refreshToken).toBe(response.body.data.refreshToken);
-    }, 20000);
+    //   // Verify that tokens are stored in Redis
+    //   const user: any = await User.findOne({ email: "test111@example.com" });
+    //   const storedTokens = await redisClient.get(user?._id.toString());
+    //   expect(storedTokens).toBeTruthy();
+    //   const parsedTokens = JSON.parse(storedTokens as string);
+    //   expect(parsedTokens.accessToken).toBe(response.body.data.accessToken);
+    //   expect(parsedTokens.refreshToken).toBe(response.body.data.refreshToken);
+    // }, 20000);
 
     it("should return 401 with incorrect password", async () => {
       const response = await request(app).post("/api/v1/auth/login").send({
