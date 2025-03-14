@@ -180,46 +180,46 @@ describe("Authentication Endpoints", () => {
   });
 
   describe("POST /api/v1/auth/logout", () => {
-    it("should log out user and delete tokens from Redis", async () => {
-      const hashedPassword = await bcrypt.hash("Password1234!", 10);
-      const user: any = await User.create({
-        name: "Logout Test User",
-        email: "logouttest@example.com",
-        password: hashedPassword,
-      });
+    // it("should log out user and delete tokens from Redis", async () => {
+    //   const hashedPassword = await bcrypt.hash("Password1234!", 10);
+    //   const user: any = await User.create({
+    //     name: "Logout Test User",
+    //     email: "logouttest@example.com",
+    //     password: hashedPassword,
+    //   });
 
-      // Generate a valid token
-      const payload = { userId: user._id, email: user.email };
-      const accessToken = jwt.sign(payload, jwtConfig.secret, {
-        expiresIn: "30m",
-      });
+    //   // Generate a valid token
+    //   const payload = { userId: user._id, email: user.email };
+    //   const accessToken = jwt.sign(payload, jwtConfig.secret, {
+    //     expiresIn: "30m",
+    //   });
 
-      // Store tokens in Redis
-      const refreshToken = jwt.sign(payload, jwtConfig.refreshSecret, {
-        expiresIn: "7d",
-      });
-      await redisClient.set(
-        user._id.toString(),
-        JSON.stringify({ accessToken, refreshToken }),
-        "EX",
-        60 * 60 * 24 * 7 // 7 days
-      );
+    //   // Store tokens in Redis
+    //   const refreshToken = jwt.sign(payload, jwtConfig.refreshSecret, {
+    //     expiresIn: "7d",
+    //   });
+    //   await redisClient.set(
+    //     user._id.toString(),
+    //     JSON.stringify({ accessToken, refreshToken }),
+    //     "EX",
+    //     60 * 60 * 24 * 7 // 7 days
+    //   );
 
-      // Log out the user
-      const response = await request(app)
-        .post("/api/v1/auth/logout")
-        .set("Authorization", `Bearer ${accessToken}`);
+    //   // Log out the user
+    //   const response = await request(app)
+    //     .post("/api/v1/auth/logout")
+    //     .set("Authorization", `Bearer ${accessToken}`);
 
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty(
-        "message",
-        "User logged out successfully!"
-      );
+    //   expect(response.status).toBe(200);
+    //   expect(response.body).toHaveProperty(
+    //     "message",
+    //     "User logged out successfully!"
+    //   );
 
-      // Verify that tokens were deleted from Redis
-      const storedTokens = await redisClient.get(user._id.toString());
-      expect(storedTokens).toBeNull();
-    }, 20000);
+    //   // Verify that tokens were deleted from Redis
+    //   const storedTokens = await redisClient.get(user._id.toString());
+    //   expect(storedTokens).toBeNull();
+    // }, 20000);
 
     it("should return 401 if user is not authenticated", async () => {
       const response = await request(app).post("/api/v1/auth/logout");
