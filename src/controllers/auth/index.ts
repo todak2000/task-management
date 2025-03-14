@@ -220,6 +220,7 @@ export const refreshToken = async (
     );
     return;
   } catch (error: any) {
+
     next(
       errorHandler(
         error.message.replace(/[^a-zA-Z0-9\s\(\)-]/g, ""),
@@ -245,11 +246,11 @@ export const logout = async (
 
     if (!userId) {
       next(errorHandler("Unauthorized", req, res, next, 401, "Unauthorized"));
-      return;
+      // return;
     }
 
     // Delete tokens from Redis
-    await redisClient.del(userId);
+    userId && await redisClient.del(userId);
 
     next(successHandler(res, null, "User logged out successfully!", 200));
     return;

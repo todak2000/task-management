@@ -91,8 +91,7 @@ const TaskSchema: Schema<ITask> = new Schema<ITask>(
     description: {
       type: String,
       required: [true, "Description is required"],
-      trim: true, // Remove leading/trailing whitespace
-      minlength: [10, "Description must be at least 10 characters long"],
+      trim: true // Remove leading/trailing whitespace
     },
     dueDate: {
       type: Date,
@@ -112,9 +111,9 @@ const TaskSchema: Schema<ITask> = new Schema<ITask>(
     },
     owner: {
       type: {
-        _id: { type: Schema.Types.ObjectId, ref: "User", required: true },
-        name: { type: String, required: true },
-        email: { type: String, required: true, lowercase: true },
+        _id: { type: Schema.Types.ObjectId, ref: "User" },
+        name: { type: String},
+        email: { type: String, lowercase: true },
       },
       required: [true, "Owner information is required"],
     },
