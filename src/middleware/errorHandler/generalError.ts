@@ -53,7 +53,8 @@ export const errorHandler = (
   const data = {
     status,
     message: errorMessage,
-    ...(process.env.NODE_ENV === "development" && { error: err }),
+    error: err,
+    // ...(process.env.NODE_ENV === "development" && { error: err }),
   };
 
   // Check if headers have already been sent
