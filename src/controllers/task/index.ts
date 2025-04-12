@@ -39,7 +39,7 @@ export const createTask = async (
 
     // Fetch the task with the associated user details
     const taskWithOwner = await Task.findByPk(newTask.id, {
-      include: [{ model: User, as: 'owner', attributes: ["name", "email"] }],
+      include: [{ model: User, as: "owner", attributes: ["name", "email"] }],
     });
 
     next(
@@ -69,7 +69,7 @@ export const getTaskById = async (
     const taskId = req.params.id;
 
     const task = await Task.findByPk(taskId, {
-      include: [{ model: User, as: 'owner', attributes: ["name", "email"] }],
+      include: [{ model: User, as: "owner", attributes: ["name", "email"] }],
     });
 
     if (!task) {
@@ -145,7 +145,9 @@ export const getTasks = async (
 
     const tasks = await Task.findAll({
       where: filter,
-      include: [{ model: User, as: 'owner', attributes: ["id", "name", "email"] }],
+      include: [
+        { model: User, as: "owner", attributes: ["id", "name", "email"] },
+      ],
       offset: (page - 1) * limit,
       limit,
       order: [["dueDate", "ASC"]],
@@ -167,7 +169,7 @@ export const getTasks = async (
     next(successHandler(res, data, "Tasks retrieved successfully"));
     return;
   } catch (error: any) {
-    console.log(error, 'get tasks')
+    console.log(error, "get tasks");
     next(
       errorHandler(
         error.message.replace(/[^a-zA-Z0-9\s\(\)-]/g, ""),
@@ -212,7 +214,7 @@ export const updateTask = async (
 
     await Task.update(updates, { where: { id: taskId } });
     const updatedTask = await Task.findByPk(taskId, {
-      include: [{ model: User, as: 'owner', attributes: ["name", "email"] }],
+      include: [{ model: User, as: "owner", attributes: ["name", "email"] }],
     });
 
     next(successHandler(res, updatedTask, "Single Task updated successfully!"));

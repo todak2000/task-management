@@ -14,16 +14,25 @@ spec:
     spec:
       serviceAccountName: cloud-sql-service-account
       containers:
-      - name: cloud-sql-proxy
-        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.1.0
-        args:
-          - "--structured-logs"
-          - "--address=0.0.0.0"
-          - "--port=3306"
-          - "YOUR_PROJECT_ID:us-central1:task-api-mysql"
-        ports:
-        - containerPort: 3306
-        resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.1.0
+          args:
+            - "--structured-logs"
+            - "--address=0.0.0.0"
+            - "--port=3306"
+            - "task-project-daniel:europe-west3:task-api-mysql"
+            - "--credentials-file=/secrets/credentials.json"
+          ports:
+            - containerPort: 3306
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: cloud-sql-key
+              mountPath: /secrets
+              readOnly: true
+      volumes:
+        - name: cloud-sql-key
+          secret:
+            secretName: cloud-sql-key

@@ -37,7 +37,7 @@ async function migrateData() {
     console.log(`🌐 Connected to MySQL on ${process.env.DB_HOST}`);
 
     // drop all existing tables and recreates them from scratch
-    await sequelize.sync({ force: true });
+    await sequelize.sync({ force: false });
     console.log(`🌐 MySQL Tables recreated on ${process.env.DB_HOST}`);
     // Migrate users
     const mongoUsers = await mongooseUserModel.find().select("+password");

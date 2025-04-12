@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import {User} from "../../database/mysql";
+import { User } from "../../database/mysql";
 import { errorHandler } from "../../middleware/errorHandler/generalError";
 import successHandler from "../../middleware/successHandler";
 
@@ -38,7 +38,7 @@ export const getUsers = async (
     };
 
     next(successHandler(res, data, "Users retrieved successfully"));
-    return
+    return;
   } catch (error: any) {
     next(
       errorHandler(
@@ -50,7 +50,7 @@ export const getUsers = async (
         ServerError
       )
     );
-    return
+    return;
   }
 };
 
@@ -80,11 +80,13 @@ export const getUserById = async (
     });
 
     if (!user) {
-      return next(errorHandler("User not found", req, res, next, 404, "User not found"));
+      return next(
+        errorHandler("User not found", req, res, next, 404, "User not found")
+      );
     }
 
     next(successHandler(res, user, "User details retrieved"));
-    return
+    return;
   } catch (error: any) {
     next(
       errorHandler(
@@ -96,6 +98,6 @@ export const getUserById = async (
         ServerError
       )
     );
-    return
+    return;
   }
 };

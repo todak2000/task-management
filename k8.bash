@@ -227,6 +227,7 @@ data:
   REDIS_USERNAME: "redis"
   CLOUD_SQL_CONNECTION_NAME: "task-project-daniel:europe-west3:task-api-mysql"
   DOMAIN_URL: "http://35.198.161.28"
+  MONGODB_URI: "mongodb+srv://todak2000:LdmD5s93m6dJl6mY@task-management-db.31ots.mongodb.net/?retryWrites=true&w=majority&appName=task-management-db"
 EOL
 
 # Development Service - NodePort
@@ -324,22 +325,27 @@ spec:
         app: task-api
         env: development
     spec:
+      serviceAccountName: $SERVICE_ACCOUNT_NAME 
       containers:
       - name: task-api
         image: gcr.io/${PROJECT_ID}/task-api:dev
+        imagePullPolicy: Always
         ports:
         - containerPort: 3000
         env:
         - name: NODE_ENV
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: NODE_ENV
+          value: "development"
         - name: DB_HOST
+          value: "127.0.0.1"
+        - name: DB_PORT
+          value: "3306"
+        - name: DOMAIN_URL
+          value: "localhost-dev"
+        - name: MONGODB_URI
           valueFrom:
             configMapKeyRef:
               name: app-config
-              key: MYSQL_HOST
+              key: MONGODB_URI
         - name: DB_NAME
           valueFrom:
             configMapKeyRef:
@@ -390,13 +396,15 @@ spec:
             secretKeyRef:
               name: app-secret
               key: JWT_REFRESH_SECRET
+        - name: INITIATE_MIGRATION
+          value: "true"
         resources:
           limits:
-            cpu: "500m"
+            cpu: "100m"
             memory: "512Mi"
           requests:
             cpu: "100m"
-            memory: "256Mi"
+            memory: "128Mi"
         readinessProbe:
           httpGet:
             path: /health
@@ -409,6 +417,28 @@ spec:
             port: 3000
           initialDelaySeconds: 15
           periodSeconds: 20
+      - name: cloud-sql-proxy
+        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.1.0
+        args:
+          - "--structured-logs"
+          - "--address=0.0.0.0"
+          - "--port=3306"
+          - "${PROJECT_ID}:${REGION}:task-api-mysql"
+          - "--credentials-file=/secrets/credentials.json"
+        ports:
+        - containerPort: 3306
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+        - name: cloud-sql-key
+          mountPath: /secrets
+          readOnly: true
+      volumes:
+      - name: cloud-sql-key
+        secret:
+          secretName: cloud-sql-key
 EOL
 
 # Production Deployment
@@ -506,11 +536,6 @@ spec:
             secretKeyRef:
               name: app-secret
               key: JWT_REFRESH_SECRET
-        - name: INSTANCE_CONNECTION_NAME
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: CLOUD_SQL_CONNECTION_NAME
         resources:
           limits:
             cpu: "1"
@@ -707,6 +732,12 @@ export SERVICE_IP=$(kubectl get service task-api-prod -o jsonpath='{.status.load
 curl http://$SERVICE_IP/health
 
 # 35.198.161.28
+
+# Remember to add the SERVICE IP to the cors allows IPS
+# go to src/middleware/customCors/index.ts to update the allowedOringins Array
+
+then rebuild and redeploy to gcloud for both prod and dev, reapply the production/dev manifests respectively
+
 
 # Debuging session
 # cloud sql instance was not running

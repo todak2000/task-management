@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { Op } from "sequelize"; // Import Sequelize operators
-import { User } from "../../database/mysql"; // Import Sequelize-initialized models
+import { Op } from "sequelize";
+import { User } from "../../database/mysql";
 import jwtConfig from "../../config/jwt";
 import { errorHandler } from "../../middleware/errorHandler/generalError";
 import successHandler from "../../middleware/successHandler";

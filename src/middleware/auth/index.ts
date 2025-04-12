@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import jwtConfig from "../../config/jwt";
 import { errorHandler } from "../errorHandler/generalError";
 import redisClient from "../../config/redis";

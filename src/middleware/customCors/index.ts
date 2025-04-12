@@ -4,6 +4,8 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:8080",
   "https://task-management-scsb.onrender.com",
+  "http://35.198.161.28",
+  "https://35.198.161.28",
 ];
 
 const customCors = cors({

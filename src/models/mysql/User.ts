@@ -10,8 +10,7 @@ export interface UserAttributes {
 }
 
 // Some attributes are optional when creating a new User
-interface UserCreationAttributes
-  extends Optional<UserAttributes, "id"> {}
+interface UserCreationAttributes extends Optional<UserAttributes, "id"> {}
 
 class User
   extends Model<UserAttributes, UserCreationAttributes>
@@ -43,7 +42,6 @@ export default function initializeUserModel(sequelize: Sequelize): typeof User {
       email: {
         type: DataTypes.STRING(100),
         allowNull: false,
-        unique: true,
         validate: {
           isEmail: {
             msg: "Please provide a valid email address",
