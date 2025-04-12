@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { errorHandler } from "../../middleware/errorHandler/generalError";
-import Task from "../../models/Task";
 import successHandler from "../../middleware/successHandler";
-import User from "../../models/User";
+import { Task, User } from "../../database/mysql";
 const ServerError = "Internal Server Error!";
+
 export const createTask = async (
   req: Request,
   res: Response,
@@ -11,17 +11,17 @@ export const createTask = async (
 ): Promise<void> => {
   try {
     const { title, description, dueDate, priority } = req.body;
-    const isValidUser = req.user?.userId; // From auth middleware
-
-    // Authorization check - users can only perform any action on task if they are autenticated
+    const isValidUser = req.user?.userId;
 
     if (!isValidUser) {
-      next(errorHandler("Unauthorized", req, res, next, 401, "Unauthorized"));
-      return;
+      return next(
+        errorHandler("Unauthorized", req, res, next, 401, "Unauthorized")
+      );
     }
 
-    // Fetch the user details from the database
-    const user = await User.findById(isValidUser).select("name email");
+    const user = await User.findByPk(isValidUser, {
+      attributes: ["name", "email"],
+    });
     if (!user) {
       return next(
         errorHandler("User not found", req, res, next, 404, "User not found")
@@ -34,118 +34,18 @@ export const createTask = async (
       dueDate,
       priority: priority.toLowerCase(),
       status: "pending",
-      owner: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-      },
+      ownerId: Number(isValidUser),
     });
 
-    next(successHandler(res, newTask, "New Task created successfully!", 201));
-    return;
-  } catch (error: any) {
+    // Fetch the task with the associated user details
+    const taskWithOwner = await Task.findByPk(newTask.id, {
+      include: [{ model: User, as: 'owner', attributes: ["name", "email"] }],
+    });
+
     next(
-      errorHandler(
-        error.message.replace(/[^a-zA-Z0-9\s\(\)-]/g, ""),
-        req,
-        res,
-        next,
-        500,
-        ServerError
-      )
+      successHandler(res, taskWithOwner, "New Task created successfully!", 201)
     );
     return;
-  }
-};
-
-export const getTasks = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const isValidUser = req.user?.userId; // From auth middleware
-
-    // Pagination parameters
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-
-    // Optional filters
-    const priorityFilter = req.query.priority?.toString().toLowerCase();
-    const statusFilter = req.query.status?.toString().toLowerCase();
-
-    // Validate priority (allowed: Low, Medium, High)
-    if (priorityFilter && !["low", "medium", "high"].includes(priorityFilter)) {
-      next(
-        errorHandler(
-          "Invalid priority",
-          req,
-          res,
-          next,
-          400,
-          "Priority must be one of: low, medium, high"
-        )
-      );
-      return;
-    }
-
-    // Validate status (allowed: Pending, Completed)
-    if (statusFilter && !["pending", "completed"].includes(statusFilter)) {
-      next(
-        errorHandler(
-          "Invalid status",
-          req,
-          res,
-          next,
-          400,
-          "Status must be one of: Pending, Completed"
-        )
-      );
-      return;
-    }
-
-    // Authorization check
-    if (!isValidUser) {
-      next(
-        errorHandler(
-          "Unauthorized",
-          req,
-          res,
-          next,
-          401,
-          "Authentication required"
-        )
-      );
-      return;
-    }
-
-    // Build query filter
-    const filter: Record<string, any> = { "owner._id": isValidUser };
-    if (priorityFilter) filter.priority = priorityFilter;
-    if (statusFilter) filter.status = statusFilter;
-
-    // Fetch tasks with pagination
-    const tasks = await Task.find(filter)
-      .populate("owner", "name email")
-      .skip((page - 1) * limit)
-      .limit(limit);
-
-    // Get total count for pagination metadata
-    const total = await Task.countDocuments(filter);
-    const totalPages = Math.ceil(total / limit);
-
-    // Response format
-    const data = {
-      tasks,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages,
-      },
-    };
-
-    next(successHandler(res, data, "Tasks retrieved successfully"));
   } catch (error: any) {
     next(
       errorHandler(
@@ -166,45 +66,108 @@ export const getTaskById = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const isValidUser = req.user?.userId; // From auth middleware
+    const taskId = req.params.id;
 
-    // Authorization check - users can only perform any action on task if they are autenticated
+    const task = await Task.findByPk(taskId, {
+      include: [{ model: User, as: 'owner', attributes: ["name", "email"] }],
+    });
 
-    if (!isValidUser) {
-      next(errorHandler("Unauthorized", req, res, next, 401, "Unauthorized"));
-      return;
-    }
-    // Find the task by ID
-    const task = await Task.findById(req.params.id).populate(
-      "owner",
-      "name email"
-    );
-    // Check if the task exists
     if (!task) {
-      next(
+      return next(
         errorHandler("Task not found", req, res, next, 404, "Task not found")
       );
-      return;
-    }
-
-    // Check if the task is owned by the authenticated user
-    if (!task?.owner || task?.owner._id.toString() !== isValidUser) {
-      next(
-        errorHandler(
-          "Forbidden",
-          req,
-          res,
-          next,
-          403,
-          "You are not authorized to access this task"
-        )
-      );
-      return;
     }
 
     next(successHandler(res, task, "Single Task retrieved successfully!"));
     return;
   } catch (error: any) {
+    next(
+      errorHandler(error.message, req, res, next, 500, "Internal Server Error")
+    );
+    return;
+  }
+};
+
+export const getTasks = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const isValidUser = req.user?.userId;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const priorityFilter = req.query.priority?.toString().toLowerCase();
+    const statusFilter = req.query.status?.toString().toLowerCase();
+
+    if (priorityFilter && !["low", "medium", "high"].includes(priorityFilter)) {
+      return next(
+        errorHandler(
+          "Invalid priority",
+          req,
+          res,
+          next,
+          400,
+          "Priority must be one of: low, medium, high"
+        )
+      );
+    }
+
+    if (statusFilter && !["pending", "completed"].includes(statusFilter)) {
+      return next(
+        errorHandler(
+          "Invalid status",
+          req,
+          res,
+          next,
+          400,
+          "Status must be one of: pending, completed"
+        )
+      );
+    }
+
+    if (!isValidUser) {
+      return next(
+        errorHandler(
+          "Unauthorized",
+          req,
+          res,
+          next,
+          401,
+          "Authentication required"
+        )
+      );
+    }
+
+    const filter: Record<string, any> = { ownerId: isValidUser };
+    if (priorityFilter) filter.priority = priorityFilter;
+    if (statusFilter) filter.status = statusFilter;
+
+    const tasks = await Task.findAll({
+      where: filter,
+      include: [{ model: User, as: 'owner', attributes: ["id", "name", "email"] }],
+      offset: (page - 1) * limit,
+      limit,
+      order: [["dueDate", "ASC"]],
+    });
+
+    const total = await Task.count({ where: filter });
+    const totalPages = Math.ceil(total / limit);
+
+    const data = {
+      tasks,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+      },
+    };
+
+    next(successHandler(res, data, "Tasks retrieved successfully"));
+    return;
+  } catch (error: any) {
+    console.log(error, 'get tasks')
     next(
       errorHandler(
         error.message.replace(/[^a-zA-Z0-9\s\(\)-]/g, ""),
@@ -218,7 +181,6 @@ export const getTaskById = async (
     return;
   }
 };
-
 export const updateTask = async (
   req: Request,
   res: Response,
@@ -227,34 +189,33 @@ export const updateTask = async (
   try {
     const taskId = req.params.id;
     const updates = req.body;
-
-    const isValidUser = req.user?.userId; // From auth middleware
-
-    // Authorization check - users can only perform any action on task if they are autenticated
+    const isValidUser = req.user?.userId;
 
     if (!isValidUser) {
-      next(errorHandler("Unauthorized", req, res, next, 401, "Unauthorized"));
-      return;
+      return next(
+        errorHandler("Unauthorized", req, res, next, 401, "Unauthorized")
+      );
     }
 
-    const task = await Task.findById(taskId);
-
+    const task = await Task.findByPk(taskId);
     if (!task) {
-      const err = "Task not found";
-      next(errorHandler(err, req, res, next, 404, err));
-      return;
+      return next(
+        errorHandler("Task not found", req, res, next, 404, "Task not found")
+      );
     }
 
-    if (task.owner._id.toString() !== isValidUser) {
-      const err = "Unauthorized to update this task";
-      next(errorHandler(err, req, res, next, 401, err));
-      return;
+    if (task.ownerId !== Number(isValidUser)) {
+      return next(
+        errorHandler("Unauthorized", req, res, next, 401, "Unauthorized")
+      );
     }
 
-    task && Object.assign(task, updates);
-    await task?.save();
+    await Task.update(updates, { where: { id: taskId } });
+    const updatedTask = await Task.findByPk(taskId, {
+      include: [{ model: User, as: 'owner', attributes: ["name", "email"] }],
+    });
 
-    next(successHandler(res, task, "Single Task updated successfully!"));
+    next(successHandler(res, updatedTask, "Single Task updated successfully!"));
     return;
   } catch (error: any) {
     next(
@@ -270,7 +231,6 @@ export const updateTask = async (
     return;
   }
 };
-
 export const deleteTask = async (
   req: Request,
   res: Response,
@@ -278,30 +238,28 @@ export const deleteTask = async (
 ): Promise<void> => {
   try {
     const taskId = req.params.id;
-    const isValidUser = req.user?.userId; // From auth middleware
-
-    // Authorization check - users can only perform any action on task if they are autenticated
+    const isValidUser = req.user?.userId;
 
     if (!isValidUser) {
-      next(errorHandler("Unauthorized", req, res, next, 401, "Unauthorized"));
-      return;
+      return next(
+        errorHandler("Unauthorized", req, res, next, 401, "Unauthorized")
+      );
     }
 
-    const task = await Task.findById(taskId);
-
+    const task = await Task.findByPk(taskId);
     if (!task) {
-      const err = "Task not found";
-      next(errorHandler(err, req, res, next, 404, err));
-      return;
+      return next(
+        errorHandler("Task not found", req, res, next, 404, "Task not found")
+      );
     }
 
-    if (task?.owner._id.toString() !== isValidUser) {
-      const err = "Unauthorized to delete this task";
-      next(errorHandler(err, req, res, next, 401, err));
-      return;
+    if (task.ownerId !== Number(isValidUser)) {
+      return next(
+        errorHandler("Unauthorized", req, res, next, 401, "Unauthorized")
+      );
     }
 
-    await Task.findByIdAndDelete(taskId);
+    await Task.destroy({ where: { id: taskId } });
     next(successHandler(res, null, "Single Task deleted successfully!", 200));
     return;
   } catch (error: any) {

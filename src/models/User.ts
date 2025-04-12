@@ -1,6 +1,4 @@
 import mongoose, { Schema, Document, Error as MongooseError } from "mongoose";
-import bcrypt from "bcrypt";
-import { NextFunction } from "express";
 /**
  * @swagger
  * components:
@@ -40,6 +38,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   createdAt: Date;
+  updatedAt?: Date;
 }
 
 const UserSchema: Schema = new Schema(

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  NODE_ENV: "production"
+  MYSQL_HOST: "cloud-sql-proxy"
+  MYSQL_DB: "taskdb"
+  MYSQL_PORT: "3306"
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"

@@ -1,8 +1,10 @@
 import { NextFunction, Request, Response } from "express";
-import User from "../../models/User";
+import {User} from "../../database/mysql";
 import { errorHandler } from "../../middleware/errorHandler/generalError";
 import successHandler from "../../middleware/successHandler";
+
 const ServerError = "Internal Server Error!";
+
 export const getUsers = async (
   req: Request,
   res: Response,
@@ -12,15 +14,21 @@ export const getUsers = async (
   const limit = parseInt(req.query.limit as string) || 10;
 
   try {
-    const users = await User.find()
-      .select("-password -__v -createdAt")
-      .skip((page - 1) * limit)
-      .limit(limit);
+    // Fetch users with pagination and exclude sensitive fields
+    const users = await User.findAll({
+      attributes: { exclude: ["password", "createdAt", "updatedAt"] }, // Exclude sensitive fields
+      offset: (page - 1) * limit,
+      limit,
+      order: [["id", "ASC"]], // Optional: Order by ID
+    });
 
-    const total = await User.countDocuments();
+    // Get total count for pagination metadata
+    const total = await User.count();
     const totalPages = Math.ceil(total / limit);
+
+    // Format response
     const data = {
-      users: users,
+      users,
       pagination: {
         total,
         page,
@@ -30,7 +38,7 @@ export const getUsers = async (
     };
 
     next(successHandler(res, data, "Users retrieved successfully"));
-    return;
+    return
   } catch (error: any) {
     next(
       errorHandler(
@@ -42,7 +50,7 @@ export const getUsers = async (
         ServerError
       )
     );
-    return;
+    return
   }
 };
 
@@ -54,7 +62,7 @@ export const getUserById = async (
   try {
     // Authorization check - users can only view their own profile unless they're an admin
     if (req.params.id !== req.user?.userId) {
-      next(
+      return next(
         errorHandler(
           "Access denied. You can only view your own profile.",
           req,
@@ -64,21 +72,19 @@ export const getUserById = async (
           "Access denied. You can only view your own profile."
         )
       );
-      return;
     }
 
-    const user = await User.findById(req.params.id).select(
-      "-password -__v -createdAt"
-    );
+    // Find user by primary key (ID)
+    const user = await User.findByPk(req.params.id, {
+      attributes: { exclude: ["password", "createdAt", "updatedAt"] }, // Exclude sensitive fields
+    });
+
     if (!user) {
-      next(
-        errorHandler("User not found", req, res, next, 404, "User not found")
-      );
-      return;
+      return next(errorHandler("User not found", req, res, next, 404, "User not found"));
     }
 
     next(successHandler(res, user, "User details retrieved"));
-    return;
+    return
   } catch (error: any) {
     next(
       errorHandler(
@@ -90,6 +96,6 @@ export const getUserById = async (
         ServerError
       )
     );
-    return;
+    return
   }
 };

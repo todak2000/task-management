@@ -10,11 +10,11 @@ import swaggerSpecs from "./config/swagger";
 import userRoutes from "./routes/users";
 import authRoutes from "./routes/auth";
 import taskRoutes from "./routes/tasks";
-import { connectToDB } from "./database";
+import { initDatabase } from "./database/mysql";
 // Load environment variables
 dotenv.config();
 // connect Database
-connectToDB();
+initDatabase();
 
 // Create Express app
 export const app: Express = express();
@@ -37,10 +37,9 @@ app.use(customCors);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Error Handling Middleware
-app.use(errorHandler);
-
 // Swagger setup needs to be configured for CSP
+const defaultCspOptions = helmet.contentSecurityPolicy.getDefaultDirectives();
+delete defaultCspOptions["upgrade-insecure-requests"];
 app.use(
   "/api-docs",
   helmet.contentSecurityPolicy({
@@ -49,13 +48,10 @@ app.use(
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:"],
+      fontSrc: ["'self'", "https:", "data:", "http:"],
+      upgradeInsecureRequests: null, // Disable upgrade-insecure-requests for /api-docs
     },
-  })
-);
-
-// Swagger documentation
-app.use(
-  "/api-docs",
+  }),
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpecs, { explorer: true })
 );
@@ -64,10 +60,20 @@ app.use(
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/tasks", taskRoutes);
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+// Error Handling Middleware
+app.use(errorHandler);
 
 // Catch-all route for undefined routes
-app.use((req, res, next) => {
-  res.status(404).json({
+app.use("*", (req: any, res: any, next) => {
+  if (res.headersSent) {
+    return next(); // Do not send another response
+  }
+
+  return res.status(404).json({
     status: "error",
     message: "Endpoint not found",
     error: `The requested endpoint ${req.method} ${req.url} does not exist`,

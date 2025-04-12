@@ -1,13 +1,16 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import User from "../../models/User";
+import { Op } from "sequelize"; // Import Sequelize operators
+import { User } from "../../database/mysql"; // Import Sequelize-initialized models
 import jwtConfig from "../../config/jwt";
 import { errorHandler } from "../../middleware/errorHandler/generalError";
 import successHandler from "../../middleware/successHandler";
 import redisClient from "../../config/redis";
 import { UserPayload } from "../../middleware/auth";
+
 const ServerError = "Internal Server Error!";
+
 export const login = async (
   req: Request,
   res: Response,
@@ -17,28 +20,29 @@ export const login = async (
     const { email, password } = req.body;
 
     // Find user by email
-    const user: { _id: string; email: string; password: string } | null =
-      await User.findOne({ email }).select("+password");
+    const user = await User.findOne({
+      where: { email },
+      attributes: { include: ["password"] }, // Include password for validation
+    });
 
     if (!user) {
-      next(errorHandler("Invalid email", req, res, next, 401, "Invalid email"));
-      return;
+      return next(
+        errorHandler("Invalid email", req, res, next, 401, "Invalid email")
+      );
     }
-
     // Check password
-    const isPasswordValid = await bcrypt.compare(password, user?.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      next(
+      return next(
         errorHandler("Wrong password!", req, res, next, 401, "Wrong password!")
       );
-      return;
     }
 
     // Create JWT payload
     const payload = {
-      userId: user?._id,
-      email: user?.email,
+      userId: user.id,
+      email: user.email,
     };
 
     // Generate access token
@@ -53,13 +57,13 @@ export const login = async (
 
     // Store refresh token in Redis (key: userId, value: refreshToken)
     await redisClient.set(
-      user?._id.toString(),
+      user.id.toString(),
       JSON.stringify({ accessToken, refreshToken }),
       "EX",
-      60 * 60 * 24 * 7
-    ); // 7 days
+      60 * 60 * 24 * 7 // 7 days
+    );
 
-    // Return token
+    // Return tokens
     next(
       successHandler(
         res,
@@ -92,35 +96,33 @@ export const register = async (
     const { name, email, password } = req.body;
     const sanitizedEmail = email.trim().toLowerCase();
     const sanitizedName = name.trim();
-    //check if the user is already exists in our database
+
+    // Check if the user already exists in the database
     const checkExistingUser = await User.findOne({
-      $or: [{ email: sanitizedEmail }],
+      where: {
+        [Op.or]: [{ email: sanitizedEmail }],
+      },
     });
+
     if (checkExistingUser) {
       const err = "Oops! This email is taken. Try a different email address.";
-      next(errorHandler(err, req, res, next, 400, err));
-      return;
+      return next(errorHandler(err, req, res, next, 400, err));
     }
 
-    //hash user password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    //create a new user and save in your database
-    const newUser = new User({
+    // Create a new user
+    const newUser = await User.create({
       name: sanitizedName,
       email: sanitizedEmail,
-      password: hashedPassword, // Should be hashed in production
+      password,
     });
 
-    const savedUser = await newUser.save();
-
+    // Prepare response (exclude sensitive fields like password)
     const userResponse = {
-      _id: savedUser._id,
-      name: savedUser.name,
-      email: savedUser.email,
-      createdAt: savedUser.createdAt,
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
     };
+
     next(
       successHandler(res, userResponse, "User Registered successfully!", 201)
     );
@@ -149,7 +151,7 @@ export const refreshToken = async (
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      next(
+      return next(
         errorHandler(
           "Refresh token is required",
           req,
@@ -159,7 +161,6 @@ export const refreshToken = async (
           "Refresh token is required"
         )
       );
-      return;
     }
 
     // Verify refresh token
@@ -171,7 +172,7 @@ export const refreshToken = async (
     // Check if refresh token exists in Redis
     const storedTokens = await redisClient.get(decoded.userId);
     if (!storedTokens) {
-      next(
+      return next(
         errorHandler(
           "Invalid or expired refresh token",
           req,
@@ -181,7 +182,6 @@ export const refreshToken = async (
           "Invalid or expired refresh token"
         )
       );
-      return;
     }
 
     const { refreshToken: storedRefreshToken } = JSON.parse(storedTokens);
@@ -197,6 +197,7 @@ export const refreshToken = async (
         )
       );
     }
+
     // Generate new access token
     const payload = { userId: decoded.userId, email: decoded.email };
     const accessToken = jwt.sign(payload, jwtConfig.secret, {
@@ -220,7 +221,6 @@ export const refreshToken = async (
     );
     return;
   } catch (error: any) {
-
     next(
       errorHandler(
         error.message.replace(/[^a-zA-Z0-9\s\(\)-]/g, ""),
@@ -245,12 +245,13 @@ export const logout = async (
     const userId = req.user?.userId;
 
     if (!userId) {
-      next(errorHandler("Unauthorized", req, res, next, 401, "Unauthorized"));
-      // return;
+      return next(
+        errorHandler("Unauthorized", req, res, next, 401, "Unauthorized")
+      );
     }
 
     // Delete tokens from Redis
-    userId && await redisClient.del(userId);
+    await redisClient.del(userId);
 
     next(successHandler(res, null, "User logged out successfully!", 200));
     return;

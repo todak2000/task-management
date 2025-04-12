@@ -61,4 +61,5 @@ export const errorHandler = (
   if (!res.headersSent) {
     res.status(status).json(data);
   }
+  return
 };

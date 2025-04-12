@@ -81,6 +81,7 @@ const validateUser = (
 
   // If validation passes, proceed to the next middleware or route handler
   next();
+  return
 };
 
 export default validateUser;

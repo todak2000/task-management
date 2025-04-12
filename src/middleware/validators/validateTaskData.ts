@@ -90,6 +90,7 @@ export const validateCreateTask = (
 
   // If validation passes, proceed to the next middleware or route handler
   next();
+  return
 };
 
 // Validation middleware for updating a task
@@ -111,4 +112,5 @@ export const validateUpdateTask = (
 
   // If validation passes, proceed to the next middleware or route handler
   next();
+  return
 };
