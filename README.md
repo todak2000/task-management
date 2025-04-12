@@ -7,6 +7,9 @@
 
 A RESTful API for task management with authentication, validation, and role-based access control. Built with Node.js, Express, MongoDB, and TypeScript following industry best practices.
 
+
+[Deployment to GCP K8 Documentation](k8s/README.md)
+
 ## Features
 
 ✅ **Authentication**
@@ -102,6 +105,9 @@ https://task-management-scsb.onrender.com/api-docs
 
 https://www.postman.com/warped-zodiac-504295/general-ws/collection/41co8bd/task-management-api
 
+### Deployment to GCP K8 Documentation
+
+[Here](k8s/README.md)
 
 ## API Reference
 
