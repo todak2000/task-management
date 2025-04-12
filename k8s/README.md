@@ -159,10 +159,9 @@ For more details on how to configure or disable the migration process, refer to 
 
 1. **Create Secrets**:
    ```bash
-   echo -n "root" | gcloud secrets create MYSQL_USER --data-file=-
-   echo -n "Qwerty@12345" | gcloud secrets create MYSQL_PASSWORD --data-file=-
-   echo -n "taskdb" | gcloud secrets create MYSQL_DB --data-file=-
-   echo -n "localhost" | gcloud secrets create MYSQL_HOST --data-file=-
+   echo -n "<db_user>" | gcloud secrets create MYSQL_USER --data-file=-
+   echo -n "<db_password>" | gcloud secrets create MYSQL_PASSWORD --data-file=-
+   echo -n "<db_name>" | gcloud secrets create MYSQL_DB --data-file=-
    ```
 
 2. **Create Kubernetes Secrets**:
@@ -236,8 +235,13 @@ For more details on how to configure or disable the migration process, refer to 
    ```
 In the event the rollout pods are failing - this is due to the current configurations using small resources. delete the deployments and re-apply the manifests.
 ```bash
-   kubectl rollout restart deployment task-api-dev
-   kubectl rollout restart deployment task-api-prod
+   #delete 
+   kubectl delete deployment task-api-dev
+   kubectl delete deployment task-api-prod
+
+   #re-apply
+   kubectl apply -f k8s/production/app-deployment.yaml
+   kubectl apply -f k8s/production/app-service.yaml
    ```
 
 ---
