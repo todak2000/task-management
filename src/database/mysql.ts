@@ -78,24 +78,28 @@ Task.belongsTo(User, {
 // Export models and sequelize instance
 export { sequelize, User, Task };
 
+let databaseInitialized = false;
 // Function to initialize database
 export const initDatabase = async () => {
-  try {
-    await sequelize.authenticate();
-    console.log(
-      `✅  Connection to database has been established successfully.`
-    );
+  if (!databaseInitialized) {
+    try {
+      await sequelize.authenticate();
+      console.log(
+        `✅  Connection to database has been established successfully.`
+      );
 
-    // Sync models with database (create tables if they don't exist)
-    await sequelize.sync({ alter: true });
-    console.log(`✅ Database synchronized successfully.`);
+      // Sync models with database (create tables if they don't exist)
+      await sequelize.sync({ alter: true });
+      console.log(`✅ Database synchronized successfully.`);
 
-    if (env === "development" && process.env.INITIATE_MIGRATION === "true") {
-      // initate migration for test purpose, this will be handled when moving to GCP
-      migrateData();
+      if (env === "development" && process.env.INITIATE_MIGRATION === "true") {
+        // initate migration for test purpose, this will be handled when moving to GCP
+        migrateData();
+      }
+      databaseInitialized = true;
+    } catch (error: any) {
+      console.error(`❌  Unable to connect to the database:`, error);
     }
-  } catch (error: any) {
-    console.error(`❌  Unable to connect to the database:`, error);
   }
 };
 

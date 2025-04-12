@@ -14,4 +14,4 @@ data:
   REDIS_USERNAME: "redis"
   CLOUD_SQL_CONNECTION_NAME: "task-project-daniel:europe-west3:task-api-mysql"
   DOMAIN_URL: "http://35.198.161.28"
-  MONGODB_URI: "mongodb+srv://todak2000:LdmD5s93m6dJl6mY@task-management-db.31ots.mongodb.net/?retryWrites=true&w=majority&appName=task-management-db"
+  MONGODB_URI: <mongo_db_uri>

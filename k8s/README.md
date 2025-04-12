@@ -32,7 +32,7 @@ Before starting, ensure you have the following:
 
 Set the following environment variables in your terminal:
 ```bash
-export PROJECT_ID="your-gcp-project-id"
+export PROJECT_ID="task-project-daniel"
 export REGION="europe-west3"
 export ZONE="europe-west3-a"
 export CLUSTER_NAME="task-api-cluster"
@@ -231,6 +231,11 @@ For more details on how to configure or disable the migration process, refer to 
 
 2. **Restart Deployments**:
    ```bash
+   kubectl rollout restart deployment task-api-dev
+   kubectl rollout restart deployment task-api-prod
+   ```
+In the event the rollout pods are failing - this is due to the current configurations using small resources. delete the deployments and re-apply the manifests.
+```bash
    kubectl rollout restart deployment task-api-dev
    kubectl rollout restart deployment task-api-prod
    ```
