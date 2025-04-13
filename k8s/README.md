@@ -17,9 +17,10 @@ This guide provides step-by-step instructions to deploy the **Task Management AP
 10. [Configuring Kubernetes Manifests for HTTPS](#configuring-kubernetes-manifests-for-https)
 11. [Deploying to Kubernetes](#deploying-to-kubernetes)
 12. [Testing the HTTPS Deployment](#testing-the-https-deployment)
-13. [Debugging and Troubleshooting](#debugging-and-troubleshooting)
-14. [Updating the Deployment](#updating-the-deployment)
-15. [Cleanup](#cleanup)
+13. [Set up monitoring](#Set-up-monitoring)
+14. [Debugging and Troubleshooting](#debugging-and-troubleshooting)
+15. [Updating the Deployment](#updating-the-deployment)
+16. [Cleanup](#cleanup)
 
 ---
 
@@ -693,7 +694,24 @@ EOL
 
 -----
 
-## 13. Debugging and Troubleshooting
+## 13. Set up monitoring
+
+1.  **Enable Cloud Monitoring API**:
+
+    ```bash
+    gcloud services enable monitoring.googleapis.com
+    ```
+2.  **Create a GKE dashboard**:
+
+    ```bash
+    gcloud container clusters update $CLUSTER_NAME \
+    --zone $ZONE \
+    --monitoring=monitoring.googleapis.com/kubernetes \
+    --logging=logging.googleapis.com/kubernetes
+    ```
+-----
+
+## 14. Debugging and Troubleshooting
 
 1.  **Check Pod Status**:
 
@@ -743,7 +761,7 @@ EOL
 
 -----
 
-## 14. Updating the Deployment
+## 15. Updating the Deployment
 
 1.  **Rebuild and Push Docker Image**:
 
@@ -769,7 +787,7 @@ EOL
 
 -----
 
-## 15. Cleanup
+## 16. Cleanup
 
 1.  **Delete Kubernetes Deployments and Services**:
 
