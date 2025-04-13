@@ -1,0 +1,14 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: task-api-ingress
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "task-api-static-ip"
+    ingress.gcp.kubernetes.io/pre-shared-cert: "ip-cert"
+spec:
+  defaultBackend:
+    service:
+      name: task-api-prod
+      port:
+        number: 80
