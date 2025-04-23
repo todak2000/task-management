@@ -1,12 +1,6 @@
 import cors from "cors";
-
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:8080",
-  "https://task-management-scsb.onrender.com",
-  "http://34.120.191.19",
-  "https://34.120.191.19",
-];
+import config from "./cors-config.json"
+const allowedOrigins = config.allowedOrigins ||  []
 
 const customCors = cors({
   origin: function (origin, callback) {
@@ -26,3 +20,4 @@ const customCors = cors({
 });
 
 export default customCors;
+

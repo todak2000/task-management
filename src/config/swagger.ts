@@ -16,18 +16,15 @@ const options: swaggerJsdoc.Options = {
         email: "d.olagunju@codematic.io",
       },
     },
-    servers: [
-      {
-        url:
-          process.env.NODE_ENV === "development"
-            ? "http://localhost:3000"
-            : process.env.DOMAIN_URL,
-        description:
-          process.env.NODE_ENV === "development"
-            ? "Development server"
-            : "Production Server",
-      },
-    ],
+    servers:
+      process.env.NODE_ENV === "development"
+        ? [
+            {
+              url: "http://localhost:3000",
+              description: "Development server",
+            },
+          ]
+        : [],
     components: {
       schemas: {
         User: {
